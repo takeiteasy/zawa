@@ -8,8 +8,247 @@
 
 #include <stdio.h>
 
+#include "glad.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <ode/ode.h>
+
+#include "helper.h"
+#include "linalgb.h"
+
+const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
+
+SDL_Window*		window;
+SDL_GLContext context;
+
+#ifdef GLAD_DEBUG
+void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
+	printf("Calling: %s (%d arguments)\n", name, len_args);
+}
+
+char* glGetError_str(GLenum err) {
+	switch (err) {
+		case GL_INVALID_ENUM:                  return "INVALID_ENUM"; break;
+		case GL_INVALID_VALUE:                 return "INVALID_VALUE"; break;
+		case GL_INVALID_OPERATION:             return "INVALID_OPERATION"; break;
+		case GL_STACK_OVERFLOW:                return "STACK_OVERFLOW"; break;
+		case GL_STACK_UNDERFLOW:               return "STACK_UNDERFLOW"; break;
+		case GL_OUT_OF_MEMORY:                 return "OUT_OF_MEMORY"; break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION: return "INVALID_FRAMEBUFFER_OPERATION"; break;
+		default:
+			return "Unknown Error";
+	}
+}
+
+void post_gl_call(const char *name, void *funcptr, int len_args, ...) {
+	GLenum err = glad_glGetError();
+	if (err != GL_NO_ERROR) {
+		fprintf(stderr, "ERROR %d (%s) in %s\n", err, glGetError_str(err), name);
+		abort();
+	}
+}
+#endif
+
+void cleanup() {
+	SDL_DestroyWindow(window);
+	SDL_GL_DeleteContext(context);
+	printf("Goodbye!\n");
+}
+
 int main(int argc, const char * argv[]) {
-	// insert code here...
-	printf("Hello, World!\n");
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		fprintf(stderr, "Failed to initalize SDL!\n");
+		return -1;
+	}
+	
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	
+	window = SDL_CreateWindow("im not gay",
+														SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+														SCREEN_WIDTH, SCREEN_HEIGHT,
+														SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+	if (!window) {
+		fprintf(stderr, "Failed to create SDL window!\n");
+		return -1;
+	}
+	
+	context = SDL_GL_CreateContext(window);
+	if (!context) {
+		fprintf(stderr, "Failed to create OpenGL context!\n");
+		return -1;
+	}
+	
+	if (!gladLoadGL()) {
+		fprintf(stderr, "Failed to load GLAD!\n");
+		return -1;
+	}
+	
+#ifdef GLAD_DEBUG
+	glad_set_pre_callback(pre_gl_call);
+	glad_set_post_callback(post_gl_call);
+#endif
+	
+	printf("Vendor:   %s\n", glGetString(GL_VENDOR));
+	printf("Renderer: %s\n", glGetString(GL_RENDERER));
+	printf("Version:  %s\n", glGetString(GL_VERSION));
+	printf("GLSL:     %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+	
+	glClearColor(220.0f/255.0f, 220.0f/255.0f, 220.0f/255.0f, 1.0f);
+	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	SDL_ShowCursor(SDL_DISABLE);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+	
+	atexit(cleanup);
+	
+	mat4 p = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
+	mat4 v = mat4_view_look_at(vec3_new(0.0f, 0.0f, 3.0f),
+														 vec3_new(0.0f, 0.0f, 0.0f),
+														 vec3_new(0.0f, 1.0f, 0.0f));
+	
+	GLuint shader = load_shader(GLSL(330,
+																	 layout (location = 0) in vec3 aPos;
+																	 layout (location = 1) in vec2 aTexCoord;
+																	 uniform mat4 model;
+																	 uniform mat4 view;
+																	 uniform mat4 projection;
+																	 out vec3 ourColor;
+																	 out vec2 TexCoord;
+																	 void main() {
+																		 gl_Position = projection * view * model* vec4(aPos, 1.0);
+																		 TexCoord = vec2(aTexCoord.x, -aTexCoord.y);
+																	 }),
+															GLSL(330,
+																	 out vec4 FragColor;
+																	 in vec2 TexCoord;
+																	 uniform sampler2D ourTexture;
+																	 void main() {
+																		 FragColor = texture(ourTexture, TexCoord);
+																	 }));
+	
+	GLuint texture = load_texture("/Users/rusty/Pictures/e6bc1c80e028e4dd8dee02d4fc708b0d464bce6778cea8f3cb186ee9dd1fa58c.jpg");
+	
+	float vertices[] = {
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+	};
+	
+	unsigned int VBO, VAO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	
+	glBindVertexArray(VAO);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	GLuint projection_loc = glGetUniformLocation(shader, "projection");
+	GLuint view_loc = glGetUniformLocation(shader, "view");
+	GLuint model_loc = glGetUniformLocation(shader, "model");
+	
+	mat4 m = mat4_id();
+	
+	Uint32 old_time, current_time = SDL_GetTicks();
+	float delta;
+	SDL_bool running = SDL_TRUE;
+	const Uint8* keys;
+	SDL_Event e;
+	while (running) {
+		old_time = current_time;
+		current_time = SDL_GetTicks();
+		delta = (current_time - old_time) / 1000.0f;
+		
+		while (SDL_PollEvent(&e)) {
+			switch (e.type) {
+				case SDL_QUIT:
+					running = SDL_FALSE;
+					break;
+			}
+		}
+		
+		keys = SDL_GetKeyboardState(NULL);
+		if (keys[SDL_GetScancodeFromKey(SDLK_ESCAPE)])
+			running = SDL_FALSE;
+		
+		m = mat4_mul_mat4(m, mat4_rotation_y(1.f * (delta * DEG2RAD(-55.f))));
+		
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		
+		glUseProgram(shader);
+		
+		glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
+		glUniformMatrix4fv(view_loc, 1, GL_FALSE, &v.m[0]);
+		glUniformMatrix4fv(model_loc, 1, GL_FALSE, &m.m[0]);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glUniform1i(glGetUniformLocation(shader, "ourTexture"), 0);
+		
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+		
+		glUseProgram(0);
+		
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		SDL_GL_SwapWindow(window);
+	}
 	return 0;
 }
