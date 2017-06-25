@@ -13,6 +13,8 @@
 		D3533D591F000A62005AFFDB /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D561F000A62005AFFDB /* glad.c */; };
 		D3533D5D1F0014B3005AFFDB /* linalgb.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5B1F0014B3005AFFDB /* linalgb.c */; };
 		D3533D601F00159B005AFFDB /* helper.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* helper.c */; };
+		D3533D621F004E59005AFFDB /* libode.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D611F004E59005AFFDB /* libode.6.dylib */; };
+		D3533D651F006F4B005AFFDB /* obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D631F006F4B005AFFDB /* obj.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -39,6 +41,9 @@
 		D3533D5C1F0014B3005AFFDB /* linalgb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linalgb.h; sourceTree = "<group>"; };
 		D3533D5E1F00159B005AFFDB /* helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = helper.c; sourceTree = "<group>"; };
 		D3533D5F1F00159B005AFFDB /* helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = helper.h; sourceTree = "<group>"; };
+		D3533D611F004E59005AFFDB /* libode.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libode.6.dylib; path = ../../../../usr/local/Cellar/ode/0.14_1/lib/libode.6.dylib; sourceTree = "<group>"; };
+		D3533D631F006F4B005AFFDB /* obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = obj.c; sourceTree = "<group>"; };
+		D3533D641F006F4B005AFFDB /* obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = obj.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +51,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D3533D621F004E59005AFFDB /* libode.6.dylib in Frameworks */,
 				D3533D541F000A1A005AFFDB /* libSDL2-2.0.0.dylib in Frameworks */,
 				D3533D521F000A09005AFFDB /* OpenGL.framework in Frameworks */,
 			);
@@ -80,6 +86,8 @@
 				D3533D5B1F0014B3005AFFDB /* linalgb.c */,
 				D3533D5C1F0014B3005AFFDB /* linalgb.h */,
 				D3533D491F000A01005AFFDB /* main.c */,
+				D3533D631F006F4B005AFFDB /* obj.c */,
+				D3533D641F006F4B005AFFDB /* obj.h */,
 			);
 			path = "cee-lo";
 			sourceTree = "<group>";
@@ -87,6 +95,7 @@
 		D3533D501F000A09005AFFDB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D3533D611F004E59005AFFDB /* libode.6.dylib */,
 				D3533D531F000A1A005AFFDB /* libSDL2-2.0.0.dylib */,
 				D3533D511F000A09005AFFDB /* OpenGL.framework */,
 			);
@@ -160,6 +169,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D3533D651F006F4B005AFFDB /* obj.c in Sources */,
 				D3533D4A1F000A01005AFFDB /* main.c in Sources */,
 				D3533D601F00159B005AFFDB /* helper.c in Sources */,
 				D3533D591F000A62005AFFDB /* glad.c in Sources */,
@@ -266,6 +276,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/sdl2/2.0.5/lib,
+					/usr/local/Cellar/ode/0.14_1/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -278,6 +289,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/sdl2/2.0.5/lib,
+					/usr/local/Cellar/ode/0.14_1/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

@@ -15,11 +15,14 @@
 
 #include "helper.h"
 #include "linalgb.h"
+#include "obj.h"
 
-const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
+static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
-SDL_Window*		window;
-SDL_GLContext context;
+static SDL_Window*		window;
+static SDL_GLContext context;
+static dWorldID world;
+static dSpaceID space;
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
@@ -52,6 +55,9 @@ void post_gl_call(const char *name, void *funcptr, int len_args, ...) {
 void cleanup() {
 	SDL_DestroyWindow(window);
 	SDL_GL_DeleteContext(context);
+	dWorldDestroy(world);
+	dSpaceDestroy(space);
+	dCloseODE();
 	printf("Goodbye!\n");
 }
 
@@ -113,11 +119,11 @@ int main(int argc, const char * argv[]) {
 	
 	GLuint shader = load_shader(GLSL(330,
 																	 layout (location = 0) in vec3 aPos;
-																	 layout (location = 1) in vec2 aTexCoord;
+																	 layout (location = 1) in vec3 aNorm;
+																	 layout (location = 2) in vec2 aTexCoord;
 																	 uniform mat4 model;
 																	 uniform mat4 view;
 																	 uniform mat4 projection;
-																	 out vec3 ourColor;
 																	 out vec2 TexCoord;
 																	 void main() {
 																		 gl_Position = projection * view * model* vec4(aPos, 1.0);
@@ -131,75 +137,34 @@ int main(int argc, const char * argv[]) {
 																		 FragColor = texture(ourTexture, TexCoord);
 																	 }));
 	
-	GLuint texture = load_texture("/Users/rusty/Pictures/e6bc1c80e028e4dd8dee02d4fc708b0d464bce6778cea8f3cb186ee9dd1fa58c.jpg");
+	GLuint texture = load_texture("/Users/rusty/Desktop/Untitled.001.png");
 	
-	float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-	};
-	
-	unsigned int VBO, VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	
-	glBindVertexArray(VAO);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	obj_t cube;
+	load_obj(&cube, "/Users/rusty/Desktop/untitled.obj");
 	
 	GLuint projection_loc = glGetUniformLocation(shader, "projection");
 	GLuint view_loc = glGetUniformLocation(shader, "view");
 	GLuint model_loc = glGetUniformLocation(shader, "model");
 	
 	mat4 m = mat4_id();
+	
+	dInitODE();
+	world = dWorldCreate();
+	space= dHashSpaceCreate(0);
+	dWorldSetGravity(world, 0, -9.81f, -0.001f);
+	dWorldSetERP(world, 0.8f);
+	dWorldSetCFM(world, 1E-5f);
+	
+	dMass mass;
+	dBodyID bodyID;
+	dGeomID geomID;
+	
+	bodyID = dBodyCreate(world);
+	dMassSetBox(&mass,1.0f,0.5f,0.5f,0.5f);
+	dBodySetMass(bodyID,&mass);
+	dBodySetPosition(bodyID,0.0f,0.0f,0.0f);
+	geomID = dCreateBox(space,0.5f,0.5f,0.5f);
+	dGeomSetBody(geomID,bodyID);
 	
 	Uint32 old_time, current_time = SDL_GetTicks();
 	float delta;
@@ -209,7 +174,7 @@ int main(int argc, const char * argv[]) {
 	while (running) {
 		old_time = current_time;
 		current_time = SDL_GetTicks();
-		delta = (current_time - old_time) / 1000.0f;
+		delta = (float)(current_time - old_time) / 1000.0f;
 		
 		while (SDL_PollEvent(&e)) {
 			switch (e.type) {
@@ -220,10 +185,20 @@ int main(int argc, const char * argv[]) {
 		}
 		
 		keys = SDL_GetKeyboardState(NULL);
+		
+		if (keys[SDL_GetScancodeFromKey(SDLK_b)])
+			printf("BREAK\n");
+		
 		if (keys[SDL_GetScancodeFromKey(SDLK_ESCAPE)])
 			running = SDL_FALSE;
 		
-		m = mat4_mul_mat4(m, mat4_rotation_y(1.f * (delta * DEG2RAD(-55.f))));
+		if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
+			dWorldStep(world, 1.f / 60.f);
+		
+		const dReal* test = dBodyGetPosition(bodyID);
+		
+		m = mat4_translation(vec3_new(test[0], test[1], test[2]));
+		// m = mat4_mul_mat4(m, mat4_rotation_y(1.f * (delta * DEG2RAD(-55.f))));
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
@@ -240,9 +215,7 @@ int main(int argc, const char * argv[]) {
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUniform1i(glGetUniformLocation(shader, "ourTexture"), 0);
 		
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
+		draw_obj(&cube);
 		
 		glUseProgram(0);
 		
