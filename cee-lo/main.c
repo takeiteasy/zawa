@@ -24,6 +24,9 @@ static SDL_Window* window;
 static SDL_GLContext context;
 static dWorldID world;
 static dSpaceID space;
+static dJointGroupID contact_group;
+#define MAX_CONTACTS 8
+static dContact contact[MAX_CONTACTS];
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
@@ -56,10 +59,36 @@ void post_gl_call(const char *name, void *funcptr, int len_args, ...) {
 void cleanup() {
 	SDL_DestroyWindow(window);
 	SDL_GL_DeleteContext(context);
-	dWorldDestroy(world);
-	dSpaceDestroy(space);
-	dCloseODE();
+  dWorldDestroy(world);
+  dSpaceDestroy(space);
+  dJointGroupDestroy(contact_group);
 	printf("Goodbye!\n");
+}
+
+
+void collide(void* data, dGeomID o1, dGeomID o2) {
+  dBodyID b1 = dGeomGetBody(o1);
+  dBodyID b2 = dGeomGetBody(o2);
+  
+  if (b1 && b2 && dAreConnectedExcluding (b1, b2, dJointTypeContact))
+    return;
+  
+  for (int i = 0; i < MAX_CONTACTS; i++) {
+    contact[i].surface.mode = dContactBounce;// | dContactSoftCFM;
+    contact[i].surface.mu = dInfinity;
+    contact[i].surface.mu2 = 0;
+    contact[i].surface.bounce = 0.0;
+    contact[i].surface.bounce_vel = 0.0;
+    contact[i].surface.soft_cfm = 0.01;
+  }
+  
+  int numc = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
+  if (numc) {
+    for (int i = 0; i < numc; i++) {
+      dJointID c = dJointCreateContact(world, contact_group, contact + i);
+      dJointAttach (c, b1, b2);
+    }
+  }
 }
 
 int main(int argc, const char * argv[]) {
@@ -93,8 +122,8 @@ int main(int argc, const char * argv[]) {
 	}
 	
 #ifdef GLAD_DEBUG
-	glad_set_pre_callback(pre_gl_call);
-	glad_set_post_callback(post_gl_call);
+//	glad_set_pre_callback(pre_gl_call);
+//	glad_set_post_callback(post_gl_call);
 #endif
 	
 	printf("Vendor:   %s\n", glGetString(GL_VENDOR));
@@ -118,7 +147,8 @@ int main(int argc, const char * argv[]) {
   camera_init_def(&cam);
   cam.pos.z = 3.f;
 	
-	GLuint shader = load_shader_str(GLSL(330,
+	GLuint shader = load_shader_str(
+GLSL(330,
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNorm;
 layout (location = 2) in vec2 aTexCoord;
@@ -133,7 +163,7 @@ void main() {
   gl_Position = projection * view * model* vec4(aPos, 1.0);
   TexCoord = aTexCoord;
 }),
-                                  GLSL(330,
+GLSL(330,
 out vec4 FragColor;
 in vec2 TexCoord;
 uniform sampler2D ourTexture;
@@ -153,21 +183,24 @@ void main() {
 	
 	mat4 m = mat4_id();
 	
-	dInitODE();
+  dInitODE2(0);
 	world = dWorldCreate();
-	space= dHashSpaceCreate(0);
+	space = dHashSpaceCreate(0);
 	dWorldSetGravity(world, 0, -9.81f, -0.001f);
 	dWorldSetERP(world, 0.8f);
 	dWorldSetCFM(world, 1E-5f);
+  contact_group = dJointGroupCreate(0);
 	
 	dMass mass;
 	dBodyID bodyID;
 	dGeomID geomID;
+  
+  dGeomID floor = dCreatePlane(space, 0, 1, 0, 0);
 	
 	bodyID = dBodyCreate(world);
 	dMassSetBox(&mass, 1.0f, 0.5f, 0.5f, 0.5f);
 	dBodySetMass(bodyID, &mass);
-	dBodySetPosition(bodyID, 0.0f, 0.0f, 0.0f);
+	dBodySetPosition(bodyID, 0.0f, 10.0f, 0.0f);
   
   dMatrix3 R;
   dRFromAxisAndAngle(R, 1.0f, 0.0f, 0.0f, M_PI / 4.0);
@@ -177,7 +210,7 @@ void main() {
 	
 	Uint32 old_time, current_time = SDL_GetTicks();
 	float delta;
-	SDL_bool running = SDL_TRUE;
+	SDL_bool running = SDL_TRUE, running_physics = SDL_TRUE;
 	const Uint8* keys;
 	SDL_Event e;
 	while (running) {
@@ -204,8 +237,8 @@ void main() {
 		if (keys[SDL_GetScancodeFromKey(SDLK_ESCAPE)])
 			running = SDL_FALSE;
 		
-		if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
-			dWorldStep(world, 1.f / 60.f);
+    if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
+      running_physics = !running_physics;
     
     if (keys[SDL_GetScancodeFromKey(SDLK_w)])
       camera_move(&cam, FORWARD);
@@ -219,6 +252,12 @@ void main() {
       camera_move(&cam, UP);
     if (keys[SDL_GetScancodeFromKey(SDLK_e)])
       camera_move(&cam, DOWN);
+    
+    if (running_physics) {
+      dSpaceCollide(space, 0, collide);
+      dWorldStep(world, 1.f / 60.f);
+      dJointGroupEmpty (contact_group);
+    }
 		
 		const dReal* t = dBodyGetPosition(bodyID);
     const dReal* r = dBodyGetRotation(bodyID);

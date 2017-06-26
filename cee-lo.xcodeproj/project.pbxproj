@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D327DEFB1F0197700081F9A0 /* libode.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D611F004E59005AFFDB /* libode.6.dylib */; };
 		D3533D4A1F000A01005AFFDB /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D491F000A01005AFFDB /* main.c */; };
 		D3533D521F000A09005AFFDB /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D511F000A09005AFFDB /* OpenGL.framework */; };
 		D3533D541F000A1A005AFFDB /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D531F000A1A005AFFDB /* libSDL2-2.0.0.dylib */; };
 		D3533D591F000A62005AFFDB /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D561F000A62005AFFDB /* glad.c */; };
 		D3533D5D1F0014B3005AFFDB /* linalgb.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5B1F0014B3005AFFDB /* linalgb.c */; };
 		D3533D601F00159B005AFFDB /* shader.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* shader.c */; };
-		D3533D621F004E59005AFFDB /* libode.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D611F004E59005AFFDB /* libode.6.dylib */; };
 		D3533D651F006F4B005AFFDB /* obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D631F006F4B005AFFDB /* obj.c */; };
 		D3533D681F008619005AFFDB /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D661F008619005AFFDB /* camera.c */; };
 		D3533D6B1F0160D8005AFFDB /* tga.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D691F0160D8005AFFDB /* tga.c */; };
@@ -32,6 +32,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D327DEF31F0197100081F9A0 /* libBulletCollision.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletCollision.0.dylib; path = ../../../../usr/local/lib/libBulletCollision.0.dylib; sourceTree = "<group>"; };
+		D327DEF41F0197100081F9A0 /* libBulletDynamics.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletDynamics.0.dylib; path = ../../../../usr/local/lib/libBulletDynamics.0.dylib; sourceTree = "<group>"; };
+		D327DEF51F0197100081F9A0 /* libBulletSoftBody.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libBulletSoftBody.0.dylib; path = ../../../../usr/local/lib/libBulletSoftBody.0.dylib; sourceTree = "<group>"; };
+		D327DEF61F0197100081F9A0 /* libLinearMath.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLinearMath.0.dylib; path = ../../../../usr/local/lib/libLinearMath.0.dylib; sourceTree = "<group>"; };
 		D3533D461F000A01005AFFDB /* cee-lo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "cee-lo"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3533D491F000A01005AFFDB /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		D3533D511F000A09005AFFDB /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -57,7 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D3533D621F004E59005AFFDB /* libode.6.dylib in Frameworks */,
+				D327DEFB1F0197700081F9A0 /* libode.6.dylib in Frameworks */,
 				D3533D541F000A1A005AFFDB /* libSDL2-2.0.0.dylib in Frameworks */,
 				D3533D521F000A09005AFFDB /* OpenGL.framework in Frameworks */,
 			);
@@ -86,12 +90,12 @@
 		D3533D481F000A01005AFFDB /* cee-lo */ = {
 			isa = PBXGroup;
 			children = (
+				D3533D491F000A01005AFFDB /* main.c */,
 				D3533D551F000A36005AFFDB /* glad */,
 				D3533D5E1F00159B005AFFDB /* shader.c */,
 				D3533D5F1F00159B005AFFDB /* shader.h */,
 				D3533D5B1F0014B3005AFFDB /* linalgb.c */,
 				D3533D5C1F0014B3005AFFDB /* linalgb.h */,
-				D3533D491F000A01005AFFDB /* main.c */,
 				D3533D631F006F4B005AFFDB /* obj.c */,
 				D3533D641F006F4B005AFFDB /* obj.h */,
 				D3533D661F008619005AFFDB /* camera.c */,
@@ -105,6 +109,10 @@
 		D3533D501F000A09005AFFDB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D327DEF31F0197100081F9A0 /* libBulletCollision.0.dylib */,
+				D327DEF41F0197100081F9A0 /* libBulletDynamics.0.dylib */,
+				D327DEF51F0197100081F9A0 /* libBulletSoftBody.0.dylib */,
+				D327DEF61F0197100081F9A0 /* libLinearMath.0.dylib */,
 				D3533D611F004E59005AFFDB /* libode.6.dylib */,
 				D3533D531F000A1A005AFFDB /* libSDL2-2.0.0.dylib */,
 				D3533D511F000A09005AFFDB /* OpenGL.framework */,
@@ -326,6 +334,7 @@
 				D3533D4F1F000A01005AFFDB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

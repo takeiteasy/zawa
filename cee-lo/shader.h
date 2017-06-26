@@ -18,4 +18,6 @@
 
 GLuint load_shader_str(const char*, const char*);
 
+// GLuint load_shader_file(const char*, const char*);
+
 #endif /* helper_h */

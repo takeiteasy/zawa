@@ -53,8 +53,10 @@ GLuint load_tga(const char* path) {
     GLubyte* data = (GLubyte*)malloc(size);
     fread(data, 1, size, fp);
     
+#ifdef TGA_SWAP
     for(GLuint cswap = 0; cswap < (int)size; cswap += bpp)
       data[cswap] ^= data[cswap + 2] ^= data[cswap] ^= data[cswap + 2];
+#endif
     
     glGenTextures(1, &ret);
     glBindTexture(GL_TEXTURE_2D, ret);

@@ -15,7 +15,7 @@
 
 #define PI180 .01745329251994329576f
 #define DEG2RAD(X) (X * PI180)
-#define RAD2DEG(X) ((X * 180.f) / M_PI)
+// #define RAD2DEG(X) ((X * 180.f) / M_PI)
 
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
