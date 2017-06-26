@@ -19,7 +19,7 @@
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
-static SDL_Window*		window;
+static SDL_Window* window;
 static SDL_GLContext context;
 static dWorldID world;
 static dSpaceID space;
@@ -160,10 +160,14 @@ int main(int argc, const char * argv[]) {
 	dGeomID geomID;
 	
 	bodyID = dBodyCreate(world);
-	dMassSetBox(&mass,1.0f,0.5f,0.5f,0.5f);
-	dBodySetMass(bodyID,&mass);
-	dBodySetPosition(bodyID,0.0f,0.0f,0.0f);
-	geomID = dCreateBox(space,0.5f,0.5f,0.5f);
+	dMassSetBox(&mass, 1.0f, 0.5f, 0.5f, 0.5f);
+	dBodySetMass(bodyID, &mass);
+	dBodySetPosition(bodyID, 0.0f, 0.0f, 0.0f);
+  
+  dMatrix3 R;
+  dRFromAxisAndAngle(R, 1.0f, 0.0f, 0.0f, M_PI / 4.0);
+  dBodySetRotation(bodyID, R);
+	geomID = dCreateBox(space, 0.5f, 0.5f, 0.5f);
 	dGeomSetBody(geomID,bodyID);
 	
 	Uint32 old_time, current_time = SDL_GetTicks();
@@ -211,10 +215,13 @@ int main(int argc, const char * argv[]) {
     if (keys[SDL_GetScancodeFromKey(SDLK_e)])
       camera_move(&cam, DOWN);
 		
-		const dReal* test = dBodyGetPosition(bodyID);
+		const dReal* t = dBodyGetPosition(bodyID);
+    const dReal* r = dBodyGetRotation(bodyID);
 		
-		m = mat4_translation(vec3_new(test[0], test[1], test[2]));
-		// m = mat4_mul_mat4(m, mat4_rotation_y(1.f * (delta * DEG2RAD(-55.f))));
+    m = mat4_new(r[0], r[4], r[8],  t[0],
+                 r[1], r[5], r[9],  t[1],
+                 r[2], r[6], r[10], t[2],
+                 0.f,  0.f,  0.f,   1.f);
     
     camera_update(&cam);
 		

@@ -64,7 +64,7 @@ void camera_move(camera_t* cam, const enum VIEW_DIRECTION d) {
     case BACK:
       cam->pos = vec3_sub(cam->pos, vec3_mul(cam->front, cam->move_speed));
       break;
-		}
+  }
 }
 
 void camera_look(camera_t* cam, int x, int y) {
