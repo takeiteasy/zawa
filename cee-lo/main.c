@@ -14,7 +14,7 @@
 #include <ode/ode.h>
 
 #include "helper.h"
-#include "linalgb.h"
+#include "camera.h"
 #include "obj.h"
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
@@ -72,9 +72,9 @@ int main(int argc, const char * argv[]) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	
 	window = SDL_CreateWindow("im not gay",
-														SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-														SCREEN_WIDTH, SCREEN_HEIGHT,
-														SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+                            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                            SCREEN_WIDTH, SCREEN_HEIGHT,
+                            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
 	if (!window) {
 		fprintf(stderr, "Failed to create SDL window!\n");
 		return -1;
@@ -113,29 +113,29 @@ int main(int argc, const char * argv[]) {
 	atexit(cleanup);
 	
 	mat4 p = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
-	mat4 v = mat4_view_look_at(vec3_new(0.0f, 0.0f, 3.0f),
-														 vec3_new(0.0f, 0.0f, 0.0f),
-														 vec3_new(0.0f, 1.0f, 0.0f));
+  camera_t cam;
+  camera_init_def(&cam);
+  cam.pos.z = 3.f;
 	
 	GLuint shader = load_shader(GLSL(330,
-																	 layout (location = 0) in vec3 aPos;
-																	 layout (location = 1) in vec3 aNorm;
-																	 layout (location = 2) in vec2 aTexCoord;
-																	 uniform mat4 model;
-																	 uniform mat4 view;
-																	 uniform mat4 projection;
-																	 out vec2 TexCoord;
-																	 void main() {
-																		 gl_Position = projection * view * model* vec4(aPos, 1.0);
-																		 TexCoord = vec2(aTexCoord.x, -aTexCoord.y);
-																	 }),
-															GLSL(330,
-																	 out vec4 FragColor;
-																	 in vec2 TexCoord;
-																	 uniform sampler2D ourTexture;
-																	 void main() {
-																		 FragColor = texture(ourTexture, TexCoord);
-																	 }));
+                                   layout (location = 0) in vec3 aPos;
+                                   layout (location = 1) in vec3 aNorm;
+                                   layout (location = 2) in vec2 aTexCoord;
+                                   uniform mat4 model;
+                                   uniform mat4 view;
+                                   uniform mat4 projection;
+                                   out vec2 TexCoord;
+                                   void main() {
+                                     gl_Position = projection * view * model* vec4(aPos, 1.0);
+                                     TexCoord = vec2(aTexCoord.x, -aTexCoord.y);
+                                   }),
+                              GLSL(330,
+                                   out vec4 FragColor;
+                                   in vec2 TexCoord;
+                                   uniform sampler2D ourTexture;
+                                   void main() {
+                                     FragColor = texture(ourTexture, TexCoord);
+                                   }));
 	
 	GLuint texture = load_texture("/Users/rusty/Desktop/Untitled.001.png");
 	
@@ -181,6 +181,9 @@ int main(int argc, const char * argv[]) {
 				case SDL_QUIT:
 					running = SDL_FALSE;
 					break;
+        case SDL_MOUSEMOTION:
+          camera_look(&cam, e.motion.xrel, -e.motion.yrel);
+          break;
 			}
 		}
 		
@@ -194,11 +197,26 @@ int main(int argc, const char * argv[]) {
 		
 		if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
 			dWorldStep(world, 1.f / 60.f);
+    
+    if (keys[SDL_GetScancodeFromKey(SDLK_w)])
+      camera_move(&cam, FORWARD);
+    if (keys[SDL_GetScancodeFromKey(SDLK_a)])
+      camera_move(&cam, LEFT);
+    if (keys[SDL_GetScancodeFromKey(SDLK_s)])
+      camera_move(&cam, BACK);
+    if (keys[SDL_GetScancodeFromKey(SDLK_d)])
+      camera_move(&cam, RIGHT);
+    if (keys[SDL_GetScancodeFromKey(SDLK_q)])
+      camera_move(&cam, UP);
+    if (keys[SDL_GetScancodeFromKey(SDLK_e)])
+      camera_move(&cam, DOWN);
 		
 		const dReal* test = dBodyGetPosition(bodyID);
 		
 		m = mat4_translation(vec3_new(test[0], test[1], test[2]));
 		// m = mat4_mul_mat4(m, mat4_rotation_y(1.f * (delta * DEG2RAD(-55.f))));
+    
+    camera_update(&cam);
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
@@ -208,7 +226,7 @@ int main(int argc, const char * argv[]) {
 		glUseProgram(shader);
 		
 		glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
-		glUniformMatrix4fv(view_loc, 1, GL_FALSE, &v.m[0]);
+		glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
 		glUniformMatrix4fv(model_loc, 1, GL_FALSE, &m.m[0]);
 		
 		glActiveTexture(GL_TEXTURE0);
@@ -223,5 +241,10 @@ int main(int argc, const char * argv[]) {
 		
 		SDL_GL_SwapWindow(window);
 	}
+  
+  free_obj(&cube);
+  glDeleteTextures(1, &texture);
+  glDeleteProgram(shader);
+  
 	return 0;
 }

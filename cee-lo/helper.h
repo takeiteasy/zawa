@@ -20,29 +20,13 @@
 #ifndef safe_free
 #define safe_free(X) \
 if (X != NULL) { \
-free(X); \
-X = NULL; \
+  free(X); \
+  X = NULL; \
 }
 #endif
 
 #ifndef array_size
 #define array_size(X) (sizeof(X) / sizeof(X[0]))
-#endif
-
-#define PI180 .01745329251994329576f
-#define DEG2RAD(X) (X * PI180)
-#define RAD2DEG(X) ((X * 180.f) / M_PI)
-
-#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif
-#ifndef NULL
-#define NULL 0
 #endif
 
 GLuint load_shader(const char*, const char*);
