@@ -12,10 +12,11 @@
 		D3533D541F000A1A005AFFDB /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D531F000A1A005AFFDB /* libSDL2-2.0.0.dylib */; };
 		D3533D591F000A62005AFFDB /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D561F000A62005AFFDB /* glad.c */; };
 		D3533D5D1F0014B3005AFFDB /* linalgb.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5B1F0014B3005AFFDB /* linalgb.c */; };
-		D3533D601F00159B005AFFDB /* helper.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* helper.c */; };
+		D3533D601F00159B005AFFDB /* shader.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* shader.c */; };
 		D3533D621F004E59005AFFDB /* libode.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D611F004E59005AFFDB /* libode.6.dylib */; };
 		D3533D651F006F4B005AFFDB /* obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D631F006F4B005AFFDB /* obj.c */; };
 		D3533D681F008619005AFFDB /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D661F008619005AFFDB /* camera.c */; };
+		D3533D6B1F0160D8005AFFDB /* tga.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D691F0160D8005AFFDB /* tga.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -40,13 +41,15 @@
 		D3533D581F000A62005AFFDB /* khrplatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = khrplatform.h; sourceTree = "<group>"; };
 		D3533D5B1F0014B3005AFFDB /* linalgb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linalgb.c; sourceTree = "<group>"; };
 		D3533D5C1F0014B3005AFFDB /* linalgb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linalgb.h; sourceTree = "<group>"; };
-		D3533D5E1F00159B005AFFDB /* helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = helper.c; sourceTree = "<group>"; };
-		D3533D5F1F00159B005AFFDB /* helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = helper.h; sourceTree = "<group>"; };
+		D3533D5E1F00159B005AFFDB /* shader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shader.c; sourceTree = "<group>"; };
+		D3533D5F1F00159B005AFFDB /* shader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader.h; sourceTree = "<group>"; };
 		D3533D611F004E59005AFFDB /* libode.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libode.6.dylib; path = ../../../../usr/local/Cellar/ode/0.14_1/lib/libode.6.dylib; sourceTree = "<group>"; };
 		D3533D631F006F4B005AFFDB /* obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = obj.c; sourceTree = "<group>"; };
 		D3533D641F006F4B005AFFDB /* obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = obj.h; sourceTree = "<group>"; };
 		D3533D661F008619005AFFDB /* camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
 		D3533D671F008619005AFFDB /* camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
+		D3533D691F0160D8005AFFDB /* tga.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tga.c; sourceTree = "<group>"; };
+		D3533D6A1F0160D8005AFFDB /* tga.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tga.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,8 +87,8 @@
 			isa = PBXGroup;
 			children = (
 				D3533D551F000A36005AFFDB /* glad */,
-				D3533D5E1F00159B005AFFDB /* helper.c */,
-				D3533D5F1F00159B005AFFDB /* helper.h */,
+				D3533D5E1F00159B005AFFDB /* shader.c */,
+				D3533D5F1F00159B005AFFDB /* shader.h */,
 				D3533D5B1F0014B3005AFFDB /* linalgb.c */,
 				D3533D5C1F0014B3005AFFDB /* linalgb.h */,
 				D3533D491F000A01005AFFDB /* main.c */,
@@ -93,6 +96,8 @@
 				D3533D641F006F4B005AFFDB /* obj.h */,
 				D3533D661F008619005AFFDB /* camera.c */,
 				D3533D671F008619005AFFDB /* camera.h */,
+				D3533D691F0160D8005AFFDB /* tga.c */,
+				D3533D6A1F0160D8005AFFDB /* tga.h */,
 			);
 			path = "cee-lo";
 			sourceTree = "<group>";
@@ -176,8 +181,9 @@
 			files = (
 				D3533D651F006F4B005AFFDB /* obj.c in Sources */,
 				D3533D4A1F000A01005AFFDB /* main.c in Sources */,
-				D3533D601F00159B005AFFDB /* helper.c in Sources */,
+				D3533D601F00159B005AFFDB /* shader.c in Sources */,
 				D3533D591F000A62005AFFDB /* glad.c in Sources */,
+				D3533D6B1F0160D8005AFFDB /* tga.c in Sources */,
 				D3533D681F008619005AFFDB /* camera.c in Sources */,
 				D3533D5D1F0014B3005AFFDB /* linalgb.c in Sources */,
 			);

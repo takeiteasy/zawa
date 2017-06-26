@@ -12,25 +12,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include "glad.h"
 
 #define GLSL(VERSION,CODE) "#version " #VERSION "\n" #CODE
 
-#ifndef safe_free
-#define safe_free(X) \
-if (X != NULL) { \
-  free(X); \
-  X = NULL; \
-}
-#endif
-
-#ifndef array_size
-#define array_size(X) (sizeof(X) / sizeof(X[0]))
-#endif
-
-GLuint load_shader(const char*, const char*);
-
-GLuint load_texture(const char*);
+GLuint load_shader_str(const char*, const char*);
 
 #endif /* helper_h */

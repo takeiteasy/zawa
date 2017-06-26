@@ -13,8 +13,9 @@
 #include <SDL2/SDL_opengl.h>
 #include <ode/ode.h>
 
-#include "helper.h"
+#include "shader.h"
 #include "camera.h"
+#include "tga.h"
 #include "obj.h"
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
@@ -117,30 +118,34 @@ int main(int argc, const char * argv[]) {
   camera_init_def(&cam);
   cam.pos.z = 3.f;
 	
-	GLuint shader = load_shader(GLSL(330,
-                                   layout (location = 0) in vec3 aPos;
-                                   layout (location = 1) in vec3 aNorm;
-                                   layout (location = 2) in vec2 aTexCoord;
-                                   uniform mat4 model;
-                                   uniform mat4 view;
-                                   uniform mat4 projection;
-                                   out vec2 TexCoord;
-                                   void main() {
-                                     gl_Position = projection * view * model* vec4(aPos, 1.0);
-                                     TexCoord = vec2(aTexCoord.x, -aTexCoord.y);
-                                   }),
-                              GLSL(330,
-                                   out vec4 FragColor;
-                                   in vec2 TexCoord;
-                                   uniform sampler2D ourTexture;
-                                   void main() {
-                                     FragColor = texture(ourTexture, TexCoord);
-                                   }));
-	
-	GLuint texture = load_texture("/Users/rusty/Desktop/Untitled.001.png");
+	GLuint shader = load_shader_str(GLSL(330,
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNorm;
+layout (location = 2) in vec2 aTexCoord;
+                                       
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec2 TexCoord;
+
+void main() {
+  gl_Position = projection * view * model* vec4(aPos, 1.0);
+  TexCoord = aTexCoord;
+}),
+                                  GLSL(330,
+out vec4 FragColor;
+in vec2 TexCoord;
+uniform sampler2D ourTexture;
+
+void main() {
+  FragColor = texture(ourTexture, TexCoord);
+}));
+  
+	GLuint texture = load_tga("/Users/rusty/git/cee-lo/res/Cube.tga");
 	
 	obj_t cube;
-	load_obj(&cube, "/Users/rusty/Desktop/untitled.obj");
+	load_obj(&cube, "/Users/rusty/git/cee-lo/res/Cube.obj");
 	
 	GLuint projection_loc = glGetUniformLocation(shader, "projection");
 	GLuint view_loc = glGetUniformLocation(shader, "view");
@@ -236,8 +241,6 @@ int main(int argc, const char * argv[]) {
 		glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
 		glUniformMatrix4fv(model_loc, 1, GL_FALSE, &m.m[0]);
 		
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
 		glUniform1i(glGetUniformLocation(shader, "ourTexture"), 0);
 		
 		draw_obj(&cube);
