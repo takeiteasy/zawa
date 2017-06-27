@@ -15,6 +15,7 @@
 
 #include "shader.h"
 #include "camera.h"
+#define TGA_SWAP
 #include "tga.h"
 #include "obj.h"
 
@@ -73,15 +74,14 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   if (b1 && b2 && dAreConnectedExcluding (b1, b2, dJointTypeContact))
     return;
   
-  for (int i = 0; i < MAX_CONTACTS; i++) {
-    contact[i].surface.mode = dContactBounce;// | dContactSoftCFM;
+  for (int i = 0; i < MAX_CONTACTS; ++i) {
+    contact[i].surface.mode = dContactBounce;
     contact[i].surface.mu = dInfinity;
     contact[i].surface.mu2 = 0;
-    contact[i].surface.bounce = 0.0;
-    contact[i].surface.bounce_vel = 0.0;
-    contact[i].surface.soft_cfm = 0.01;
+    contact[i].surface.bounce = 0.2;
+    contact[i].surface.bounce_vel = 0.1;
   }
-  
+
   int numc = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
   if (numc) {
     for (int i = 0; i < numc; i++) {
@@ -145,7 +145,8 @@ int main(int argc, const char * argv[]) {
 	mat4 p = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
   camera_t cam;
   camera_init_def(&cam);
-  cam.pos.z = 3.f;
+  cam.pos.z = 5.f;
+  cam.pos.y = 1.f;
 	
 	GLuint shader = load_shader_str(
 GLSL(330,
@@ -172,38 +173,43 @@ void main() {
   FragColor = texture(ourTexture, TexCoord);
 }));
   
-	GLuint texture = load_tga("/Users/rusty/git/cee-lo/res/Cube.tga");
+	GLuint cube_tex  = load_tga("/Users/rusty/git/cee-lo/res/dice.tga");
+  GLuint plane_tex = load_tga("/Users/rusty/git/cee-lo/res/bamboo.tga");
 	
-	obj_t cube;
-	load_obj(&cube, "/Users/rusty/git/cee-lo/res/Cube.obj");
+	obj_t cube, plane;
+	load_obj(&cube, "/Users/rusty/git/cee-lo/res/dice.obj");
+  load_obj(&plane, "/Users/rusty/git/cee-lo/res/plane.obj");
 	
 	GLuint projection_loc = glGetUniformLocation(shader, "projection");
 	GLuint view_loc = glGetUniformLocation(shader, "view");
 	GLuint model_loc = glGetUniformLocation(shader, "model");
 	
-	mat4 m = mat4_id();
+	mat4 plane_m = mat4_id(), m = mat4_id();
 	
-  dInitODE2(0);
+  dInitODE();
 	world = dWorldCreate();
 	space = dHashSpaceCreate(0);
-	dWorldSetGravity(world, 0, -9.81f, -0.001f);
-	dWorldSetERP(world, 0.8f);
-	dWorldSetCFM(world, 1E-5f);
+	dWorldSetGravity(world, 0.f, -9.81f, 0.f);
+  dWorldSetLinearDamping(world, 0.0001);
+  dWorldSetAngularDamping(world, 0.005);
+  dWorldSetMaxAngularSpeed(world, 200);
+  dWorldSetContactMaxCorrectingVel(world, 0.1);
+  dWorldSetContactSurfaceLayer(world, 0.001);
   contact_group = dJointGroupCreate(0);
 	
 	dMass mass;
 	dBodyID bodyID;
 	dGeomID geomID;
   
-  dGeomID floor = dCreatePlane(space, 0, 1, 0, 0);
+  dCreatePlane(space, 0, 1, 0, 0);
 	
 	bodyID = dBodyCreate(world);
-	dMassSetBox(&mass, 1.0f, 0.5f, 0.5f, 0.5f);
+	dMassSetBox(&mass, 1.0f, 1.0f, 1.0f, 1.0f);
 	dBodySetMass(bodyID, &mass);
-	dBodySetPosition(bodyID, 0.0f, 10.0f, 0.0f);
+	dBodySetPosition(bodyID, 0.0f, 50.f, 0.0f);
   
   dMatrix3 R;
-  dRFromAxisAndAngle(R, 1.0f, 0.0f, 0.0f, M_PI / 4.0);
+  dRFromAxisAndAngle(R, 1.0f, 0.2f, 0.5f, M_PI / 4.0);
   dBodySetRotation(bodyID, R);
 	geomID = dCreateBox(space, 0.5f, 0.5f, 0.5f);
 	dGeomSetBody(geomID,bodyID);
@@ -266,15 +272,16 @@ void main() {
                  r[1], r[5], r[9],  t[1],
                  r[2], r[6], r[10], t[2],
                  0.f,  0.f,  0.f,   1.f);
+    m = mat4_mul_mat4(m, mat4_scale(vec3_new(0.25f, 0.25f, 0.25f)));
     
     camera_update(&cam);
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		
 		glUseProgram(shader);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, cube_tex);
 		
 		glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
 		glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
@@ -287,12 +294,33 @@ void main() {
 		glUseProgram(0);
 		
 		glBindTexture(GL_TEXTURE_2D, 0);
+    
+    
+    
+    glUseProgram(shader);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, plane_tex);
+    
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(model_loc, 1, GL_FALSE, &plane_m.m[0]);
+    
+    glUniform1i(glGetUniformLocation(shader, "ourTexture"), 0);
+    
+    draw_obj(&plane);
+    
+    glUseProgram(0);
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
 		
 		SDL_GL_SwapWindow(window);
 	}
   
   free_obj(&cube);
-  glDeleteTextures(1, &texture);
+  free_obj(&plane);
+  glDeleteTextures(1, &cube_tex);
+  glDeleteTextures(1, &plane_tex);
   glDeleteProgram(shader);
   
 	return 0;
