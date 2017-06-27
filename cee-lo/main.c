@@ -13,11 +13,12 @@
 #include <SDL2/SDL_opengl.h>
 #include <ode/ode.h>
 
-#include "shader.h"
+#include "helpers.h"
 #include "camera.h"
-#define TGA_SWAP
-#include "tga.h"
 #include "obj.h"
+#include "vector.h"
+
+#include <png.h>
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
@@ -28,6 +29,7 @@ static dSpaceID space;
 static dJointGroupID contact_group;
 #define MAX_CONTACTS 8
 static dContact contact[MAX_CONTACTS];
+static vector_t dice;
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
@@ -66,7 +68,6 @@ void cleanup() {
 	printf("Goodbye!\n");
 }
 
-
 void collide(void* data, dGeomID o1, dGeomID o2) {
   dBodyID b1 = dGeomGetBody(o1);
   dBodyID b2 = dGeomGetBody(o2);
@@ -89,6 +90,37 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
       dJointAttach (c, b1, b2);
     }
   }
+}
+
+typedef struct {
+  dGeomID geom;
+  dBodyID body;
+  mat4 world;
+  obj_t* model;
+  GLuint texture;
+} game_obj_t;
+
+void draw_game_obj(game_obj_t* o, GLuint model_loc, GLuint texture_loc) {
+  glUniformMatrix4fv(model_loc, 1, GL_FALSE, &o->world.m[0]);
+  
+  if (texture_loc && o->texture) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, o->texture);
+    glUniform1i(texture_loc, 0);
+  }
+  draw_obj(o->model);
+  
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void free_game_obj(game_obj_t* o) {
+  dGeomDestroy(o->geom);
+  if (o->model) {
+    free_obj(o->model);
+    o->model = NULL;
+  }
+  if (o->texture)
+    glDeleteTextures(1, &o->texture);
 }
 
 int main(int argc, const char * argv[]) {
@@ -162,7 +194,7 @@ out vec2 TexCoord;
 
 void main() {
   gl_Position = projection * view * model* vec4(aPos, 1.0);
-  TexCoord = aTexCoord;
+  TexCoord = vec2(aTexCoord.x, -aTexCoord.y);
 }),
 GLSL(330,
 out vec4 FragColor;
@@ -173,18 +205,19 @@ void main() {
   FragColor = texture(ourTexture, TexCoord);
 }));
   
-	GLuint cube_tex  = load_tga("/Users/rusty/git/cee-lo/res/dice.tga");
-  GLuint plane_tex = load_tga("/Users/rusty/git/cee-lo/res/bamboo.tga");
-	
-	obj_t cube, plane;
-	load_obj(&cube, "/Users/rusty/git/cee-lo/res/dice.obj");
-  load_obj(&plane, "/Users/rusty/git/cee-lo/res/plane.obj");
-	
+  int cube_tex_w, cube_tex_h;
+	GLuint cube_tex  = load_texture("/Users/rusty/git/cee-lo/res/dice.tga", &cube_tex_w, &cube_tex_h);
+  
+	obj_t cube_obj, plane_obj;
+	load_obj(&cube_obj,  "/Users/rusty/git/cee-lo/res/dice.obj");
+  load_obj(&plane_obj, "/Users/rusty/git/cee-lo/res/plane.obj");
+  
+  vector_init(&dice);
+  
 	GLuint projection_loc = glGetUniformLocation(shader, "projection");
 	GLuint view_loc = glGetUniformLocation(shader, "view");
 	GLuint model_loc = glGetUniformLocation(shader, "model");
-	
-	mat4 plane_m = mat4_id(), m = mat4_id();
+  GLuint texture_loc = glGetUniformLocation(shader, "ourTexture");
 	
   dInitODE();
 	world = dWorldCreate();
@@ -196,27 +229,16 @@ void main() {
   dWorldSetContactMaxCorrectingVel(world, 0.1);
   dWorldSetContactSurfaceLayer(world, 0.001);
   contact_group = dJointGroupCreate(0);
-	
-	dMass mass;
-	dBodyID bodyID;
-	dGeomID geomID;
   
-  dCreatePlane(space, 0, 1, 0, 0);
-	
-	bodyID = dBodyCreate(world);
-	dMassSetBox(&mass, 1.0f, 1.0f, 1.0f, 1.0f);
-	dBodySetMass(bodyID, &mass);
-	dBodySetPosition(bodyID, 0.0f, 50.f, 0.0f);
-  
-  dMatrix3 R;
-  dRFromAxisAndAngle(R, 1.0f, 0.2f, 0.5f, M_PI / 4.0);
-  dBodySetRotation(bodyID, R);
-	geomID = dCreateBox(space, 0.5f, 0.5f, 0.5f);
-	dGeomSetBody(geomID,bodyID);
+  game_obj_t plane;
+  plane.geom = dCreatePlane(space, 0, 1, 0, 0);
+  plane.model = &plane_obj;
+  plane.texture = 0;
+  plane.world = mat4_id();
 	
 	Uint32 old_time, current_time = SDL_GetTicks();
 	float delta;
-	SDL_bool running = SDL_TRUE, running_physics = SDL_TRUE;
+	SDL_bool running = SDL_TRUE, running_physics;
 	const Uint8* keys;
 	SDL_Event e;
 	while (running) {
@@ -232,6 +254,27 @@ void main() {
         case SDL_MOUSEMOTION:
           camera_look(&cam, e.motion.xrel, -e.motion.yrel);
           break;
+        case SDL_KEYUP:
+          if (e.key.keysym.sym == SDLK_z) {
+            game_obj_t* tmp = (game_obj_t*)malloc(sizeof(game_obj_t));
+            tmp->body = dBodyCreate(world);
+            dMass mass;
+            dMassSetBox(&mass, 1.0f, 1.0f, 1.0f, 1.0f);
+            dBodySetMass(tmp->body, &mass);
+            dBodySetPosition(tmp->body, 0.0f, 30.f, 0.0f);
+            dMatrix3 R;
+            dRFromAxisAndAngle(R, 0.2, 0.4, 0.6, M_PI / 4.0);
+            dBodySetRotation(tmp->body, R);
+            
+            tmp->geom = dCreateBox(space, 0.5f, 0.5f, 0.5f);
+            dGeomSetBody(tmp->geom, tmp->body);
+            
+            tmp->model = &cube_obj;
+            tmp->texture = cube_tex;
+            
+            vector_push(&dice, (void*)tmp);
+          }
+          break;
 			}
 		}
 		
@@ -240,11 +283,12 @@ void main() {
 		if (keys[SDL_GetScancodeFromKey(SDLK_b)])
 			printf("BREAK\n");
 		
+    running_physics = SDL_TRUE;
 		if (keys[SDL_GetScancodeFromKey(SDLK_ESCAPE)])
 			running = SDL_FALSE;
 		
     if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
-      running_physics = !running_physics;
+      running_physics = SDL_FALSE;
     
     if (keys[SDL_GetScancodeFromKey(SDLK_w)])
       camera_move(&cam, FORWARD);
@@ -265,62 +309,41 @@ void main() {
       dJointGroupEmpty (contact_group);
     }
 		
-		const dReal* t = dBodyGetPosition(bodyID);
-    const dReal* r = dBodyGetRotation(bodyID);
-		
-    m = mat4_new(r[0], r[4], r[8],  t[0],
-                 r[1], r[5], r[9],  t[1],
-                 r[2], r[6], r[10], t[2],
-                 0.f,  0.f,  0.f,   1.f);
-    m = mat4_mul_mat4(m, mat4_scale(vec3_new(0.25f, 0.25f, 0.25f)));
-    
     camera_update(&cam);
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		glUseProgram(shader);
     
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cube_tex);
-		
-		glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
-		glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
-		glUniformMatrix4fv(model_loc, 1, GL_FALSE, &m.m[0]);
-		
-		glUniform1i(glGetUniformLocation(shader, "ourTexture"), 0);
-		
-		draw_obj(&cube);
-		
-		glUseProgram(0);
-		
-		glBindTexture(GL_TEXTURE_2D, 0);
-    
-    
-    
-    glUseProgram(shader);
-    
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, plane_tex);
-    
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, &plane_m.m[0]);
     
-    glUniform1i(glGetUniformLocation(shader, "ourTexture"), 0);
-    
-    draw_obj(&plane);
+    for (int i = 0; i < dice.length; ++i) {
+      game_obj_t* tmp = (game_obj_t*)vector_get(&dice, i);
+      
+      const dReal* t = dBodyGetPosition(tmp->body);
+      const dReal* r = dBodyGetRotation(tmp->body);
+      
+      tmp->world = mat4_mul_mat4(mat4_new(r[0], r[4], r[8],  t[0],
+                                          r[1], r[5], r[9],  t[1],
+                                          r[2], r[6], r[10], t[2],
+                                          0.f,  0.f,  0.f,   1.f),
+                                 mat4_scale(vec3_new(0.25f, 0.25f, 0.25f)));
+      
+      draw_game_obj(tmp, model_loc, texture_loc);
+    }
+
+    draw_game_obj(&plane, model_loc, 0);
     
     glUseProgram(0);
-    
-    glBindTexture(GL_TEXTURE_2D, 0);
 		
 		SDL_GL_SwapWindow(window);
 	}
   
-  free_obj(&cube);
-  free_obj(&plane);
-  glDeleteTextures(1, &cube_tex);
-  glDeleteTextures(1, &plane_tex);
+  for (int i = 0; i < dice.length; ++i)
+    free_game_obj((game_obj_t*)vector_get(&dice, i));
+  vector_free(&dice);
+  free_game_obj(&plane);
   glDeleteProgram(shader);
   
 	return 0;
