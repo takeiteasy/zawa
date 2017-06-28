@@ -29,6 +29,7 @@ static dJointGroupID contact_group;
 static dContact contact[MAX_CONTACTS];
 static vector_t dice;
 static mat4 dice_scale;
+#define DICE_VEL 500
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
@@ -262,11 +263,14 @@ void main() {
             game_obj_t* tmp = (game_obj_t*)malloc(sizeof(game_obj_t));
             tmp->body = dBodyCreate(world);
             dMass mass;
-            dMassSetBox(&mass, 0.5, 0.5, 0.5, 0.5);
+            dMassSetBox(&mass, 1, 1, 1, 1);
             dBodySetMass(tmp->body, &mass);
-            dBodySetPosition(tmp->body, 0.0f, 5.0, 0.0);
+            dBodySetPosition(tmp->body, cam.pos.x, cam.pos.y, cam.pos.z);
             dMatrix3 R;
             dRFromEulerAngles(R, rand_angle, rand_angle, rand_angle);
+            vec3 test = vec3_normalize(vec3_new(cam.front.x, cam.front.y, cam.front.z));
+            dBodyAddForce(tmp->body, test.x * DICE_VEL, cam.front.y * DICE_VEL, test.z * DICE_VEL);
+            dBodyAddTorque(tmp->body, rand_range(-100, 100), rand_range(-100, 100), rand_range(-100, 100));
             dBodySetRotation(tmp->body, R);
             
             tmp->geom = dCreateBox(space, .4, .4, .4);
