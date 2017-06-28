@@ -121,6 +121,8 @@ void free_game_obj(game_obj_t* o) {
 }
 
 int main(int argc, const char * argv[]) {
+  srand((unsigned int)time(NULL));
+  
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		fprintf(stderr, "Failed to initalize SDL!\n");
 		return -1;
@@ -227,8 +229,8 @@ void main() {
   dWorldSetMaxAngularSpeed(world, 200);
   dWorldSetContactMaxCorrectingVel(world, 0.1);
   dWorldSetContactSurfaceLayer(world, 0.001);
-  dWorldSetERP(world, 0.8);
-  dWorldSetCFM(world, 1e-5);
+//  dWorldSetERP(world, 0.8);
+//  dWorldSetCFM(world, 1e-5);
   contact_group = dJointGroupCreate(0);
   
   game_obj_t plane;
@@ -262,9 +264,9 @@ void main() {
             dMass mass;
             dMassSetBox(&mass, 0.5, 0.5, 0.5, 0.5);
             dBodySetMass(tmp->body, &mass);
-            dBodySetPosition(tmp->body, 0.0f, 20.0, 0.0);
+            dBodySetPosition(tmp->body, 0.0f, 5.0, 0.0);
             dMatrix3 R;
-            dRFromAxisAndAngle(R, 0.2, 0.4, 0.6, M_PI / 4.0);
+            dRFromEulerAngles(R, rand_angle, rand_angle, rand_angle);
             dBodySetRotation(tmp->body, R);
             
             tmp->geom = dCreateBox(space, .4, .4, .4);
