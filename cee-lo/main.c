@@ -18,8 +18,6 @@
 #include "obj.h"
 #include "vector.h"
 
-#include <png.h>
-
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
 static SDL_Window* window;
@@ -30,6 +28,7 @@ static dJointGroupID contact_group;
 #define MAX_CONTACTS 8
 static dContact contact[MAX_CONTACTS];
 static vector_t dice;
+static mat4 dice_scale;
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
@@ -72,21 +71,19 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   dBodyID b1 = dGeomGetBody(o1);
   dBodyID b2 = dGeomGetBody(o2);
   
-  if (b1 && b2 && dAreConnectedExcluding (b1, b2, dJointTypeContact))
+  if (b1 && b2 && dAreConnectedExcluding(b1, b2, dJointTypeContact))
     return;
   
-  for (int i = 0; i < MAX_CONTACTS; ++i) {
-    contact[i].surface.mode = dContactBounce;
-    contact[i].surface.mu = dInfinity;
-    contact[i].surface.mu2 = 0;
-    contact[i].surface.bounce = 0.2;
-    contact[i].surface.bounce_vel = 0.1;
-  }
-
   int numc = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
   if (numc) {
     for (int i = 0; i < numc; i++) {
-      dJointID c = dJointCreateContact(world, contact_group, contact + i);
+      contact[i].surface.mode = dContactBounce;
+      contact[i].surface.mu = dInfinity;
+      contact[i].surface.mu2 = dInfinity;
+      contact[i].surface.bounce = 0.1;
+      contact[i].surface.bounce_vel = 0.2;
+      
+      dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
       dJointAttach (c, b1, b2);
     }
   }
@@ -218,23 +215,27 @@ void main() {
 	GLuint view_loc = glGetUniformLocation(shader, "view");
 	GLuint model_loc = glGetUniformLocation(shader, "model");
   GLuint texture_loc = glGetUniformLocation(shader, "ourTexture");
+  
+  dice_scale = mat4_scale(vec3_new(.2f, .2f, .2f));
 	
   dInitODE();
 	world = dWorldCreate();
 	space = dHashSpaceCreate(0);
-	dWorldSetGravity(world, 0.f, -9.81f, 0.f);
+	dWorldSetGravity(world, 0.0, -9.81, 0.0);
   dWorldSetLinearDamping(world, 0.0001);
   dWorldSetAngularDamping(world, 0.005);
   dWorldSetMaxAngularSpeed(world, 200);
   dWorldSetContactMaxCorrectingVel(world, 0.1);
   dWorldSetContactSurfaceLayer(world, 0.001);
+  dWorldSetERP(world, 0.8);
+  dWorldSetCFM(world, 1e-5);
   contact_group = dJointGroupCreate(0);
   
   game_obj_t plane;
   plane.geom = dCreatePlane(space, 0, 1, 0, 0);
   plane.model = &plane_obj;
   plane.texture = 0;
-  plane.world = mat4_id();
+  plane.world = mat4_mul_mat4(mat4_id(), mat4_scale(vec3_new(5, 5, 5)));
 	
 	Uint32 old_time, current_time = SDL_GetTicks();
 	float delta;
@@ -259,14 +260,14 @@ void main() {
             game_obj_t* tmp = (game_obj_t*)malloc(sizeof(game_obj_t));
             tmp->body = dBodyCreate(world);
             dMass mass;
-            dMassSetBox(&mass, 1.0f, 1.0f, 1.0f, 1.0f);
+            dMassSetBox(&mass, 0.5, 0.5, 0.5, 0.5);
             dBodySetMass(tmp->body, &mass);
-            dBodySetPosition(tmp->body, 0.0f, 30.f, 0.0f);
+            dBodySetPosition(tmp->body, 0.0f, 20.0, 0.0);
             dMatrix3 R;
             dRFromAxisAndAngle(R, 0.2, 0.4, 0.6, M_PI / 4.0);
             dBodySetRotation(tmp->body, R);
             
-            tmp->geom = dCreateBox(space, 0.5f, 0.5f, 0.5f);
+            tmp->geom = dCreateBox(space, .4, .4, .4);
             dGeomSetBody(tmp->geom, tmp->body);
             
             tmp->model = &cube_obj;
@@ -305,7 +306,7 @@ void main() {
     
     if (running_physics) {
       dSpaceCollide(space, 0, collide);
-      dWorldStep(world, 1.f / 60.f);
+      dWorldQuickStep(world, 1.f / 60.f);
       dJointGroupEmpty (contact_group);
     }
 		
@@ -324,11 +325,11 @@ void main() {
       const dReal* t = dBodyGetPosition(tmp->body);
       const dReal* r = dBodyGetRotation(tmp->body);
       
-      tmp->world = mat4_mul_mat4(mat4_new(r[0], r[4], r[8],  t[0],
-                                          r[1], r[5], r[9],  t[1],
-                                          r[2], r[6], r[10], t[2],
+      tmp->world = mat4_mul_mat4(mat4_new(r[0], r[1], r[2],  t[0],
+                                          r[4], r[5], r[6],  t[1],
+                                          r[8], r[9], r[10], t[2],
                                           0.f,  0.f,  0.f,   1.f),
-                                 mat4_scale(vec3_new(0.25f, 0.25f, 0.25f)));
+                                 dice_scale);
       
       draw_game_obj(tmp, model_loc, texture_loc);
     }
