@@ -78,10 +78,8 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   if (numc) {
     for (int i = 0; i < numc; i++) {
       contact[i].surface.mode = dContactBounce;
-      contact[i].surface.mu = dInfinity;
-      contact[i].surface.mu2 = dInfinity;
-      contact[i].surface.bounce = 0.1;
-      contact[i].surface.bounce_vel = 0.2;
+      contact[i].surface.mu = 5000;
+      contact[i].surface.bounce = 0.2;
       
       dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
       dJointAttach (c, b1, b2);
@@ -228,8 +226,8 @@ void main() {
   dWorldSetMaxAngularSpeed(world, 200);
   dWorldSetContactMaxCorrectingVel(world, 0.1);
   dWorldSetContactSurfaceLayer(world, 0.001);
-//  dWorldSetERP(world, 0.8);
-//  dWorldSetCFM(world, 1e-5);
+  dWorldSetERP(world, 0.8);
+  dWorldSetCFM(world, 1e-5);
   contact_group = dJointGroupCreate(0);
   
   game_obj_t plane;
@@ -269,19 +267,18 @@ void main() {
             dBodySetMass(tmp->body, &mass);
             dBodySetPosition(tmp->body, cam.pos.x, cam.pos.y, cam.pos.z);
             dMatrix3 R;
-            dRFromEulerAngles(R, rand_angle, rand_angle, rand_angle);
-            vec3 cam_norm = vec3_normalize(cam.front);
-            dBodyAddForce(tmp->body,
-                          cam_norm.x * rand_range(300, 500),
-                          cam_norm.y * rand_range(300, 500),
-                          cam_norm.z * rand_range(300, 500));
-            dBodyAddTorque(tmp->body,
-                           rand_range(-100, 100),
-                           rand_range(-100, 100),
-                           rand_range(-100, 100));
+            vec3 rand_euler = vec3_new(rand_angle, rand_angle, rand_angle);
+            dRFromEulerAngles(R, rand_euler.x, rand_euler.y, rand_euler.z);
             dBodySetRotation(tmp->body, R);
             
-            tmp->geom = dCreateBox(space, .19, .19, .19);
+            vec3 vel = vec3_new(rand_range(200, 400), rand_range(200, 400), rand_range(200, 400));
+            vec3 force = vec3_mul_vec3(vec3_normalize(cam.front), vel);
+            dBodyAddForce(tmp->body, force.x, force.y, force.z);
+            
+            force = vec3_mul_vec3(vec3_normalize(vec3_cross(rand_euler, force)), vec3_div(vel, 1.5f));
+            dBodySetTorque(tmp->body, force.x, force.y, force.z);
+            
+            tmp->geom = dCreateBox(space, .2, .2, .2);
             dGeomSetBody(tmp->geom, tmp->body);
             
             tmp->model = &cube_obj;
