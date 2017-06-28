@@ -29,7 +29,6 @@ static dJointGroupID contact_group;
 static dContact contact[MAX_CONTACTS];
 static vector_t dice;
 static mat4 dice_scale;
-#define DICE_VEL 500
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
@@ -100,12 +99,10 @@ typedef struct {
 
 void draw_game_obj(game_obj_t* o, GLuint model_loc, GLuint texture_loc) {
   glUniformMatrix4fv(model_loc, 1, GL_FALSE, &o->world.m[0]);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, o->texture);
+  glUniform1i(texture_loc, 0);
   
-  if (texture_loc && o->texture) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, o->texture);
-    glUniform1i(texture_loc, 0);
-  }
   draw_obj(o->model);
   
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -154,8 +151,8 @@ int main(int argc, const char * argv[]) {
 	}
 	
 #ifdef GLAD_DEBUG
-//	glad_set_pre_callback(pre_gl_call);
-//	glad_set_post_callback(post_gl_call);
+  glad_set_pre_callback(pre_gl_call);
+  glad_set_post_callback(post_gl_call);
 #endif
 	
 	printf("Vendor:   %s\n", glGetString(GL_VENDOR));
@@ -168,6 +165,7 @@ int main(int argc, const char * argv[]) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glCullFace(GL_BACK);
 	
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -219,7 +217,7 @@ void main() {
 	GLuint model_loc = glGetUniformLocation(shader, "model");
   GLuint texture_loc = glGetUniformLocation(shader, "ourTexture");
   
-  dice_scale = mat4_scale(vec3_new(.2f, .2f, .2f));
+  dice_scale = mat4_scale(vec3_new(.1f, .1f, .1f));
 	
   dInitODE();
 	world = dWorldCreate();
@@ -237,8 +235,12 @@ void main() {
   game_obj_t plane;
   plane.geom = dCreatePlane(space, 0, 1, 0, 0);
   plane.model = &plane_obj;
-  plane.texture = 0;
-  plane.world = mat4_mul_mat4(mat4_id(), mat4_scale(vec3_new(5, 5, 5)));
+  int plane_tex_w, plane_tex_h;
+  plane.texture = load_texture("/Users/rusty/git/cee-lo/res/checkered.png", &plane_tex_w, &plane_tex_h);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  //plane.world = mat4_mul_mat4(mat4_id(), mat4_scale(vec3_new(5, 5, 5)));
+  plane.world = mat4_id();
 	
 	Uint32 old_time, current_time = SDL_GetTicks();
 	float delta;
@@ -268,12 +270,18 @@ void main() {
             dBodySetPosition(tmp->body, cam.pos.x, cam.pos.y, cam.pos.z);
             dMatrix3 R;
             dRFromEulerAngles(R, rand_angle, rand_angle, rand_angle);
-            vec3 test = vec3_normalize(vec3_new(cam.front.x, cam.front.y, cam.front.z));
-            dBodyAddForce(tmp->body, test.x * DICE_VEL, cam.front.y * DICE_VEL, test.z * DICE_VEL);
-            dBodyAddTorque(tmp->body, rand_range(-100, 100), rand_range(-100, 100), rand_range(-100, 100));
+            vec3 cam_norm = vec3_normalize(cam.front);
+            dBodyAddForce(tmp->body,
+                          cam_norm.x * rand_range(300, 500),
+                          cam_norm.y * rand_range(300, 500),
+                          cam_norm.z * rand_range(300, 500));
+            dBodyAddTorque(tmp->body,
+                           rand_range(-100, 100),
+                           rand_range(-100, 100),
+                           rand_range(-100, 100));
             dBodySetRotation(tmp->body, R);
             
-            tmp->geom = dCreateBox(space, .4, .4, .4);
+            tmp->geom = dCreateBox(space, .19, .19, .19);
             dGeomSetBody(tmp->geom, tmp->body);
             
             tmp->model = &cube_obj;
@@ -340,7 +348,7 @@ void main() {
       draw_game_obj(tmp, model_loc, texture_loc);
     }
 
-    draw_game_obj(&plane, model_loc, 0);
+    draw_game_obj(&plane, model_loc, texture_loc);
     
     glUseProgram(0);
 		
