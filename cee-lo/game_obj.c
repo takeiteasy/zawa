@@ -14,6 +14,7 @@ static mat4 dice_scale = {
   0.f, 0.f, .1f, 0.f,
   0.f, 0.f, 0.f, 1.f
 };
+static const dReal *t, *r;
 
 void draw_game_obj(game_obj_t* o, GLuint model_loc, GLuint texture_loc) {
   glUniformMatrix4fv(model_loc, 1, GL_FALSE, &o->world.m[0]);
@@ -27,8 +28,8 @@ void draw_game_obj(game_obj_t* o, GLuint model_loc, GLuint texture_loc) {
 }
 
 void update_game_obj(game_obj_t* o) {
-  const dReal* t = dBodyGetPosition(o->body);
-  const dReal* r = dBodyGetRotation(o->body);
+  t = dBodyGetPosition(o->body);
+  r = dBodyGetRotation(o->body);
   
   o->world = mat4_mul_mat4(mat4_new(r[0], r[1], r[2],  t[0],
                                     r[4], r[5], r[6],  t[1],

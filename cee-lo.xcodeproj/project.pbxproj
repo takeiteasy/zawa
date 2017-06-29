@@ -61,6 +61,10 @@
 		D3EA46791F052F47007EAE1B /* khrplatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = khrplatform.h; path = 3rdparty/khrplatform.h; sourceTree = "<group>"; };
 		D3EA467A1F052F47007EAE1B /* linalgb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = linalgb.c; path = 3rdparty/linalgb.c; sourceTree = "<group>"; };
 		D3EA467B1F052F47007EAE1B /* linalgb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = linalgb.h; path = 3rdparty/linalgb.h; sourceTree = "<group>"; };
+		D3EA467F1F05339F007EAE1B /* cimgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = cimgui.dylib; path = ../../../../usr/local/lib/cimgui.dylib; sourceTree = "<group>"; };
+		D3EA46851F059F6A007EAE1B /* Bowl_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Bowl_obj.h; path = objs/Bowl_obj.h; sourceTree = "<group>"; };
+		D3EA46861F059F6A007EAE1B /* Plane_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Plane_obj.h; path = objs/Plane_obj.h; sourceTree = "<group>"; };
+		D3EA46871F059F6A007EAE1B /* Cube_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Cube_obj.h; path = objs/Cube_obj.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +102,7 @@
 			isa = PBXGroup;
 			children = (
 				D3EA46741F052F3B007EAE1B /* 3rdparty */,
+				D3EA46841F059F2D007EAE1B /* objs */,
 				D3533D491F000A01005AFFDB /* main.c */,
 				D3533D5E1F00159B005AFFDB /* helpers.c */,
 				D3533D5F1F00159B005AFFDB /* helpers.h */,
@@ -116,6 +121,7 @@
 		D3533D501F000A09005AFFDB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D3EA467F1F05339F007EAE1B /* cimgui.dylib */,
 				D327DF051F02997F0081F9A0 /* libpng16.16.dylib */,
 				D327DEF31F0197100081F9A0 /* libBulletCollision.0.dylib */,
 				D327DEF41F0197100081F9A0 /* libBulletDynamics.0.dylib */,
@@ -140,6 +146,16 @@
 				D3EA467B1F052F47007EAE1B /* linalgb.h */,
 			);
 			name = 3rdparty;
+			sourceTree = "<group>";
+		};
+		D3EA46841F059F2D007EAE1B /* objs */ = {
+			isa = PBXGroup;
+			children = (
+				D3EA46851F059F6A007EAE1B /* Bowl_obj.h */,
+				D3EA46861F059F6A007EAE1B /* Plane_obj.h */,
+				D3EA46871F059F6A007EAE1B /* Cube_obj.h */,
+			);
+			name = objs;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

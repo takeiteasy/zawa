@@ -10,11 +10,11 @@
 #define game_obj_h
 
 #include "3rdparty/glad.h"
+#include "3rdparty/linalgb.h"
 #include <ode/ode.h>
 
 #include "helpers.h"
 #include "obj.h"
-#include "3rdparty/linalgb.h"
 
 #define rand_angle (frand_range(-6.28319f, 6.28319f))
 #define force_range (frand_range(5.f, 10.f))

@@ -74,8 +74,8 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   int numc = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
   if (numc) {
     for (int i = 0; i < numc; i++) {
-      contact[i].surface.mode = dContactBounce;
-      contact[i].surface.mu = 5000;
+      contact[i].surface.mode   = dContactBounce;
+      contact[i].surface.mu     = 5000;
       contact[i].surface.bounce = 0.2;
       
       dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
@@ -120,7 +120,7 @@ int main(int argc, const char * argv[]) {
 //  glad_set_pre_callback(pre_gl_call);
 //  glad_set_post_callback(post_gl_call);
 #endif
-	
+  
 	printf("Vendor:   %s\n", glGetString(GL_VENDOR));
 	printf("Renderer: %s\n", glGetString(GL_RENDERER));
 	printf("Version:  %s\n", glGetString(GL_VERSION));
@@ -169,12 +169,15 @@ void main() {
   FragColor = texture(ourTexture, TexCoord);
 }));
   
-  int cube_tex_w, cube_tex_h;
+  int cube_tex_w, cube_tex_h,
+      bowl_tex_w, bowl_tex_h,
+      plane_tex_w, plane_tex_h;
 	GLuint cube_tex  = load_texture("/Users/rusty/git/cee-lo/res/dice.png", &cube_tex_w, &cube_tex_h);
   
-	obj_t cube_obj, plane_obj;
+	obj_t cube_obj, plane_obj, bowl_obj;
 	load_obj(&cube_obj,  "/Users/rusty/git/cee-lo/res/dice.obj");
   load_obj(&plane_obj, "/Users/rusty/git/cee-lo/res/plane.obj");
+  load_obj(&bowl_obj, "/Users/rusty/git/cee-lo/res/bowl.obj");
   
   vector_init(&dice);
   
@@ -199,13 +202,17 @@ void main() {
   game_obj_t plane;
   plane.geom = dCreatePlane(space, 0, 1, 0, 0);
   plane.model = &plane_obj;
-  int plane_tex_w, plane_tex_h;
   plane.texture = load_texture("/Users/rusty/git/cee-lo/res/checkered.png", &plane_tex_w, &plane_tex_h);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   //plane.world = mat4_mul_mat4(mat4_id(), mat4_scale(vec3_new(5, 5, 5)));
   plane.world = mat4_id();
-	
+  
+  game_obj_t bowl;
+  bowl.model = &bowl_obj;
+  bowl.texture = load_texture("/Users/rusty/git/cee-lo/res/Untitled.png", &bowl_tex_w, &bowl_tex_h);
+  bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
+  
 	Uint32 old_time, current_time = SDL_GetTicks();
 	float delta;
 	SDL_bool running = SDL_TRUE, running_physics;
@@ -241,7 +248,8 @@ void main() {
             vec3 vel = vec3_new(force_range, force_range, force_range);
             vec3 force = vec3_mul_vec3(vec3_normalize(cam.front), vel);
             dBodySetLinearVel(tmp->body, force.x, force.y, force.z);
-            dBodySetAngularVel(tmp->body, -vel.x * 3.f, -vel.y / 2, vel.z / 2);
+            force = vec3_cross(cam.front, vec3_mul(vec3_neg(vel), 3.f));
+            dBodySetAngularVel(tmp->body, force.x, force.y, force.z);
             
             tmp->geom = dCreateBox(space, .2, .2, .2);
             dGeomSetBody(tmp->geom, tmp->body);
@@ -303,8 +311,10 @@ void main() {
 
     draw_game_obj(&plane, model_loc, texture_loc);
     
+    draw_game_obj(&bowl, model_loc, texture_loc);
+    
     glUseProgram(0);
-		
+    
 		SDL_GL_SwapWindow(window);
 	}
   
