@@ -11,12 +11,10 @@
 #include "glad.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
-#include <ode/ode.h>
 
-#include "helpers.h"
 #include "camera.h"
-#include "obj.h"
 #include "vector.h"
+#include "game_obj.h"
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
@@ -28,7 +26,6 @@ static dJointGroupID contact_group;
 #define MAX_CONTACTS 8
 static dContact contact[MAX_CONTACTS];
 static vector_t dice;
-static mat4 dice_scale;
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
@@ -87,35 +84,6 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   }
 }
 
-typedef struct {
-  dGeomID geom;
-  dBodyID body;
-  mat4 world;
-  obj_t* model;
-  GLuint texture;
-} game_obj_t;
-
-void draw_game_obj(game_obj_t* o, GLuint model_loc, GLuint texture_loc) {
-  glUniformMatrix4fv(model_loc, 1, GL_FALSE, &o->world.m[0]);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, o->texture);
-  glUniform1i(texture_loc, 0);
-  
-  draw_obj(o->model);
-  
-  glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void free_game_obj(game_obj_t* o) {
-  dGeomDestroy(o->geom);
-  if (o->model) {
-    free_obj(o->model);
-    o->model = NULL;
-  }
-  if (o->texture)
-    glDeleteTextures(1, &o->texture);
-}
-
 int main(int argc, const char * argv[]) {
   srand((unsigned int)time(NULL));
   
@@ -149,8 +117,8 @@ int main(int argc, const char * argv[]) {
 	}
 	
 #ifdef GLAD_DEBUG
-  glad_set_pre_callback(pre_gl_call);
-  glad_set_post_callback(post_gl_call);
+//  glad_set_pre_callback(pre_gl_call);
+//  glad_set_post_callback(post_gl_call);
 #endif
 	
 	printf("Vendor:   %s\n", glGetString(GL_VENDOR));
@@ -215,8 +183,6 @@ void main() {
 	GLuint model_loc = glGetUniformLocation(shader, "model");
   GLuint texture_loc = glGetUniformLocation(shader, "ourTexture");
   
-  dice_scale = mat4_scale(vec3_new(.1f, .1f, .1f));
-	
   dInitODE();
 	world = dWorldCreate();
 	space = dHashSpaceCreate(0);
@@ -266,17 +232,16 @@ void main() {
             dMassSetBox(&mass, 1, 1, 1, 1);
             dBodySetMass(tmp->body, &mass);
             dBodySetPosition(tmp->body, cam.pos.x, cam.pos.y, cam.pos.z);
+            
             dMatrix3 R;
             vec3 rand_euler = vec3_new(rand_angle, rand_angle, rand_angle);
             dRFromEulerAngles(R, rand_euler.x, rand_euler.y, rand_euler.z);
             dBodySetRotation(tmp->body, R);
             
-            vec3 vel = vec3_new(rand_range(200, 400), rand_range(200, 400), rand_range(200, 400));
+            vec3 vel = vec3_new(force_range, force_range, force_range);
             vec3 force = vec3_mul_vec3(vec3_normalize(cam.front), vel);
-            dBodyAddForce(tmp->body, force.x, force.y, force.z);
-            
-            force = vec3_mul_vec3(vec3_normalize(vec3_cross(rand_euler, force)), vec3_div(vel, 1.5f));
-            dBodySetTorque(tmp->body, force.x, force.y, force.z);
+            dBodySetLinearVel(tmp->body, force.x, force.y, force.z);
+            dBodySetAngularVel(tmp->body, -vel.x * 3.f, -vel.y / 2, vel.z / 2);
             
             tmp->geom = dCreateBox(space, .2, .2, .2);
             dGeomSetBody(tmp->geom, tmp->body);
@@ -332,16 +297,7 @@ void main() {
     
     for (int i = 0; i < dice.length; ++i) {
       game_obj_t* tmp = (game_obj_t*)vector_get(&dice, i);
-      
-      const dReal* t = dBodyGetPosition(tmp->body);
-      const dReal* r = dBodyGetRotation(tmp->body);
-      
-      tmp->world = mat4_mul_mat4(mat4_new(r[0], r[1], r[2],  t[0],
-                                          r[4], r[5], r[6],  t[1],
-                                          r[8], r[9], r[10], t[2],
-                                          0.f,  0.f,  0.f,   1.f),
-                                 dice_scale);
-      
+      update_game_obj(tmp);
       draw_game_obj(tmp, model_loc, texture_loc);
     }
 

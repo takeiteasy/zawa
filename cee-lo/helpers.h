@@ -15,8 +15,10 @@
 #include "glad.h"
 
 #define rand_range(min, max) (rand() % (max + 1 - min) + min)
-#define rand_angle (((float)rand() / (float)(RAND_MAX)) * 6.28319f)
-#define rand_01 rand_range(0, 1)
+#define frand_range(min, max) ((max - min) * ((((float)rand()) / (float) RAND_MAX)) + min)
+#define rand_angle (frand_range(-6.28319f, 6.28319f))
+#define force_range (frand_range(5.f, 10.f))
+#define rand_01 (rand_range(0, 1))
 #define frand_01 (rand_range(0, 100) / 100.f)
 
 #define GLSL(VERSION,CODE) "#version " #VERSION "\n" #CODE

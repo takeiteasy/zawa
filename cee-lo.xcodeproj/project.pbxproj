@@ -17,6 +17,7 @@
 		D3533D601F00159B005AFFDB /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* helpers.c */; };
 		D3533D651F006F4B005AFFDB /* obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D631F006F4B005AFFDB /* obj.c */; };
 		D3533D681F008619005AFFDB /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D661F008619005AFFDB /* camera.c */; };
+		D3EA46711F051C88007EAE1B /* game_obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA466F1F051C88007EAE1B /* game_obj.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -56,6 +57,8 @@
 		D3533D641F006F4B005AFFDB /* obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = obj.h; sourceTree = "<group>"; };
 		D3533D661F008619005AFFDB /* camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
 		D3533D671F008619005AFFDB /* camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
+		D3EA466F1F051C88007EAE1B /* game_obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = game_obj.c; sourceTree = "<group>"; };
+		D3EA46701F051C88007EAE1B /* game_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game_obj.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +116,8 @@
 				D3533D671F008619005AFFDB /* camera.h */,
 				D327DF021F0289D00081F9A0 /* vector.c */,
 				D327DF031F0289D00081F9A0 /* vector.h */,
+				D3EA466F1F051C88007EAE1B /* game_obj.c */,
+				D3EA46701F051C88007EAE1B /* game_obj.h */,
 			);
 			path = "cee-lo";
 			sourceTree = "<group>";
@@ -206,6 +211,7 @@
 				D327DF041F0289D00081F9A0 /* vector.c in Sources */,
 				D3533D681F008619005AFFDB /* camera.c in Sources */,
 				D3533D5D1F0014B3005AFFDB /* linalgb.c in Sources */,
+				D3EA46711F051C88007EAE1B /* game_obj.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
