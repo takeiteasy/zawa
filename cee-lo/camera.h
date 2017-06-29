@@ -10,8 +10,8 @@
 #define camera_h
 
 #include <math.h>
-#include "linalgb.h"
-#include "glad.h"
+#include "3rdparty/linalgb.h"
+#include "3rdparty/glad.h"
 
 #define PI180 .01745329251994329576f
 #define DEG2RAD(X) (X * PI180)

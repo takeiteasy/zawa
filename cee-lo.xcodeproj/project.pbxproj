@@ -12,12 +12,13 @@
 		D3533D4A1F000A01005AFFDB /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D491F000A01005AFFDB /* main.c */; };
 		D3533D521F000A09005AFFDB /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D511F000A09005AFFDB /* OpenGL.framework */; };
 		D3533D541F000A1A005AFFDB /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D531F000A1A005AFFDB /* libSDL2-2.0.0.dylib */; };
-		D3533D591F000A62005AFFDB /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D561F000A62005AFFDB /* glad.c */; };
-		D3533D5D1F0014B3005AFFDB /* linalgb.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5B1F0014B3005AFFDB /* linalgb.c */; };
 		D3533D601F00159B005AFFDB /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* helpers.c */; };
 		D3533D651F006F4B005AFFDB /* obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D631F006F4B005AFFDB /* obj.c */; };
 		D3533D681F008619005AFFDB /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D661F008619005AFFDB /* camera.c */; };
 		D3EA46711F051C88007EAE1B /* game_obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA466F1F051C88007EAE1B /* game_obj.c */; };
+		D3EA467C1F052F47007EAE1B /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA46751F052F47007EAE1B /* stb_image.c */; };
+		D3EA467D1F052F47007EAE1B /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA46771F052F47007EAE1B /* glad.c */; };
+		D3EA467E1F052F47007EAE1B /* linalgb.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA467A1F052F47007EAE1B /* linalgb.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -40,16 +41,10 @@
 		D327DF021F0289D00081F9A0 /* vector.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vector.c; sourceTree = "<group>"; };
 		D327DF031F0289D00081F9A0 /* vector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vector.h; sourceTree = "<group>"; };
 		D327DF051F02997F0081F9A0 /* libpng16.16.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpng16.16.dylib; path = ../../../../usr/local/Cellar/libpng/1.6.29/lib/libpng16.16.dylib; sourceTree = "<group>"; };
-		D327DF081F029BFA0081F9A0 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		D3533D461F000A01005AFFDB /* cee-lo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "cee-lo"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3533D491F000A01005AFFDB /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		D3533D511F000A09005AFFDB /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		D3533D531F000A1A005AFFDB /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../../../../usr/local/Cellar/sdl2/2.0.5/lib/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
-		D3533D561F000A62005AFFDB /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
-		D3533D571F000A62005AFFDB /* glad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glad.h; sourceTree = "<group>"; };
-		D3533D581F000A62005AFFDB /* khrplatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = khrplatform.h; sourceTree = "<group>"; };
-		D3533D5B1F0014B3005AFFDB /* linalgb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linalgb.c; sourceTree = "<group>"; };
-		D3533D5C1F0014B3005AFFDB /* linalgb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linalgb.h; sourceTree = "<group>"; };
 		D3533D5E1F00159B005AFFDB /* helpers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = helpers.c; sourceTree = "<group>"; };
 		D3533D5F1F00159B005AFFDB /* helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = helpers.h; sourceTree = "<group>"; };
 		D3533D611F004E59005AFFDB /* libode.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libode.6.dylib; path = ../../../../usr/local/Cellar/ode/0.14_1/lib/libode.6.dylib; sourceTree = "<group>"; };
@@ -59,6 +54,13 @@
 		D3533D671F008619005AFFDB /* camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
 		D3EA466F1F051C88007EAE1B /* game_obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = game_obj.c; sourceTree = "<group>"; };
 		D3EA46701F051C88007EAE1B /* game_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game_obj.h; sourceTree = "<group>"; };
+		D3EA46751F052F47007EAE1B /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = stb_image.c; path = 3rdparty/stb_image.c; sourceTree = "<group>"; };
+		D3EA46761F052F47007EAE1B /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_image.h; path = 3rdparty/stb_image.h; sourceTree = "<group>"; };
+		D3EA46771F052F47007EAE1B /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = glad.c; path = 3rdparty/glad.c; sourceTree = "<group>"; };
+		D3EA46781F052F47007EAE1B /* glad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = glad.h; path = 3rdparty/glad.h; sourceTree = "<group>"; };
+		D3EA46791F052F47007EAE1B /* khrplatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = khrplatform.h; path = 3rdparty/khrplatform.h; sourceTree = "<group>"; };
+		D3EA467A1F052F47007EAE1B /* linalgb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = linalgb.c; path = 3rdparty/linalgb.c; sourceTree = "<group>"; };
+		D3EA467B1F052F47007EAE1B /* linalgb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = linalgb.h; path = 3rdparty/linalgb.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,16 +77,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D327DF071F029BCB0081F9A0 /* libs */ = {
-			isa = PBXGroup;
-			children = (
-				D327DF081F029BFA0081F9A0 /* stb_image.h */,
-				D3533D5B1F0014B3005AFFDB /* linalgb.c */,
-				D3533D5C1F0014B3005AFFDB /* linalgb.h */,
-			);
-			name = libs;
-			sourceTree = "<group>";
-		};
 		D3533D3D1F000A01005AFFDB = {
 			isa = PBXGroup;
 			children = (
@@ -105,8 +97,7 @@
 		D3533D481F000A01005AFFDB /* cee-lo */ = {
 			isa = PBXGroup;
 			children = (
-				D327DF071F029BCB0081F9A0 /* libs */,
-				D3533D551F000A36005AFFDB /* glad */,
+				D3EA46741F052F3B007EAE1B /* 3rdparty */,
 				D3533D491F000A01005AFFDB /* main.c */,
 				D3533D5E1F00159B005AFFDB /* helpers.c */,
 				D3533D5F1F00159B005AFFDB /* helpers.h */,
@@ -137,14 +128,18 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		D3533D551F000A36005AFFDB /* glad */ = {
+		D3EA46741F052F3B007EAE1B /* 3rdparty */ = {
 			isa = PBXGroup;
 			children = (
-				D3533D561F000A62005AFFDB /* glad.c */,
-				D3533D571F000A62005AFFDB /* glad.h */,
-				D3533D581F000A62005AFFDB /* khrplatform.h */,
+				D3EA46751F052F47007EAE1B /* stb_image.c */,
+				D3EA46761F052F47007EAE1B /* stb_image.h */,
+				D3EA46771F052F47007EAE1B /* glad.c */,
+				D3EA46781F052F47007EAE1B /* glad.h */,
+				D3EA46791F052F47007EAE1B /* khrplatform.h */,
+				D3EA467A1F052F47007EAE1B /* linalgb.c */,
+				D3EA467B1F052F47007EAE1B /* linalgb.h */,
 			);
-			name = glad;
+			name = 3rdparty;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -206,12 +201,13 @@
 			files = (
 				D3533D651F006F4B005AFFDB /* obj.c in Sources */,
 				D3533D4A1F000A01005AFFDB /* main.c in Sources */,
+				D3EA467E1F052F47007EAE1B /* linalgb.c in Sources */,
 				D3533D601F00159B005AFFDB /* helpers.c in Sources */,
-				D3533D591F000A62005AFFDB /* glad.c in Sources */,
 				D327DF041F0289D00081F9A0 /* vector.c in Sources */,
 				D3533D681F008619005AFFDB /* camera.c in Sources */,
-				D3533D5D1F0014B3005AFFDB /* linalgb.c in Sources */,
+				D3EA467C1F052F47007EAE1B /* stb_image.c in Sources */,
 				D3EA46711F051C88007EAE1B /* game_obj.c in Sources */,
+				D3EA467D1F052F47007EAE1B /* glad.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

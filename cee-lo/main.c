@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-#include "glad.h"
+#include "3rdparty/glad.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
@@ -170,7 +170,7 @@ void main() {
 }));
   
   int cube_tex_w, cube_tex_h;
-	GLuint cube_tex  = load_texture("/Users/rusty/git/cee-lo/res/dice.tga", &cube_tex_w, &cube_tex_h);
+	GLuint cube_tex  = load_texture("/Users/rusty/git/cee-lo/res/dice.png", &cube_tex_w, &cube_tex_h);
   
 	obj_t cube_obj, plane_obj;
 	load_obj(&cube_obj,  "/Users/rusty/git/cee-lo/res/dice.obj");

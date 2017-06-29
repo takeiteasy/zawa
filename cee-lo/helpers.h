@@ -12,12 +12,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "glad.h"
+
+#include "3rdparty/glad.h"
+#define STBI_ONLY_PNG
+#include "3rdparty/stb_image.h"
 
 #define rand_range(min, max) (rand() % (max + 1 - min) + min)
 #define frand_range(min, max) ((max - min) * ((((float)rand()) / (float) RAND_MAX)) + min)
-#define rand_angle (frand_range(-6.28319f, 6.28319f))
-#define force_range (frand_range(5.f, 10.f))
 #define rand_01 (rand_range(0, 1))
 #define frand_01 (rand_range(0, 100) / 100.f)
 

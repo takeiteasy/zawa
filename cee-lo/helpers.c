@@ -7,8 +7,6 @@
 //
 
 #include "helpers.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 GLuint __make_shader(GLenum type, const char* src) {
 	GLuint shader = glCreateShader(type);

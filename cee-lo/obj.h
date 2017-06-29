@@ -9,7 +9,7 @@
 #ifndef obj_h
 #define obj_h
 
-#include "glad.h"
+#include "3rdparty/glad.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
