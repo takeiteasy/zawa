@@ -6,8 +6,8 @@
 #include <stdarg.h>
 
 typedef struct {
-	int    length;
-	void** data;
+  int    length;
+  void** data;
 } vector_t;
 
 #define vector_len(v) v.length

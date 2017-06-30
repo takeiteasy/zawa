@@ -22,18 +22,18 @@
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
 enum VIEW_DIRECTION {
-	UP,
-	DOWN,
-	LEFT,
-	RIGHT,
-	FORWARD,
-	BACK
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT,
+  FORWARD,
+  BACK
 };
 
 typedef struct {
   vec3 pos, front, up, right, world;
   GLfloat yaw, pitch, move_speed, sensitivity, zoom;
-	mat4 view;
+  mat4 view;
 } camera_t;
 
 void camera_init_def(camera_t*);

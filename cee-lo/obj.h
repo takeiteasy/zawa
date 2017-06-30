@@ -15,8 +15,8 @@
 #include <string.h>
 
 typedef struct {
-	int size;
-	GLuint id;
+  int size;
+  GLuint id;
 } obj_t;
 
 void load_obj(obj_t*, const char*);
