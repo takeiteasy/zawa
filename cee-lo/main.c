@@ -16,6 +16,8 @@
 #include "vector.h"
 #include "game_obj.h"
 
+#include "objs/Icosphere_obj.h"
+
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
 static SDL_Window* window;
@@ -75,7 +77,10 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   if (numc) {
     for (int i = 0; i < numc; i++) {
       contact[i].surface.mode   = dContactBounce;
-      contact[i].surface.mu     = 5000;
+      contact[i].surface.mu     = 5000.f;
+      contact[i].surface.mu2    = 5000.f;
+      contact[i].surface.soft_cfm = 1e-5;
+      contact[i].surface.soft_erp = 0.8;
       contact[i].surface.bounce = 0.2;
       
       dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
@@ -117,8 +122,8 @@ int main(int argc, const char * argv[]) {
 	}
 	
 #ifdef GLAD_DEBUG
-//  glad_set_pre_callback(pre_gl_call);
-//  glad_set_post_callback(post_gl_call);
+  glad_set_pre_callback(pre_gl_call);
+  glad_set_post_callback(post_gl_call);
 #endif
   
 	printf("Vendor:   %s\n", glGetString(GL_VENDOR));
@@ -195,8 +200,8 @@ void main() {
   dWorldSetMaxAngularSpeed(world, 200);
   dWorldSetContactMaxCorrectingVel(world, 0.1);
   dWorldSetContactSurfaceLayer(world, 0.001);
-  dWorldSetERP(world, 0.8);
-  dWorldSetCFM(world, 1e-5);
+//  dWorldSetERP(world, 0.8);
+//  dWorldSetCFM(world, 1e-5);
   contact_group = dJointGroupCreate(0);
   
   game_obj_t plane;
@@ -209,9 +214,17 @@ void main() {
   plane.world = mat4_id();
   
   game_obj_t bowl;
+  bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
   bowl.model = &bowl_obj;
   bowl.texture = load_texture("/Users/rusty/git/cee-lo/res/Untitled.png", &bowl_tex_w, &bowl_tex_h);
-  bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
+  dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
+  dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
+  bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);
+  bowl.body = dBodyCreate(world);
+  dBodySetPosition(bowl.body, 0.f, 0.84f, 0.f);
+  dGeomSetBody(bowl.geom, bowl.body);
+  dBodyDestroy(bowl.body);
+  update_game_obj(&bowl, 0);
   
 	Uint32 old_time, current_time = SDL_GetTicks();
 	float delta;
@@ -305,7 +318,7 @@ void main() {
     
     for (int i = 0; i < dice.length; ++i) {
       game_obj_t* tmp = (game_obj_t*)vector_get(&dice, i);
-      update_game_obj(tmp);
+      update_game_obj(tmp, 1);
       draw_game_obj(tmp, model_loc, texture_loc);
     }
 
@@ -322,6 +335,8 @@ void main() {
     free_game_obj((game_obj_t*)vector_get(&dice, i));
   vector_free(&dice);
   free_game_obj(&plane);
+  dGeomTriMeshDataDestroy(bowl_tri);
+  free_game_obj(&bowl);
   glDeleteProgram(shader);
   
 	return 0;

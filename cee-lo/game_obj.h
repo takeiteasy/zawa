@@ -28,7 +28,7 @@ typedef struct {
 } game_obj_t;
 
 void draw_game_obj(game_obj_t*, GLuint, GLuint);
-void update_game_obj(game_obj_t*);
+void update_game_obj(game_obj_t*, int);
 void free_game_obj(game_obj_t*);
 
 #endif /* game_obj_h */
