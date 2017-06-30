@@ -15,8 +15,7 @@
 #include "camera.h"
 #include "vector.h"
 #include "game_obj.h"
-
-#include "objs/Icosphere_obj.h"
+#include "Icosphere_obj.h"
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
@@ -216,14 +215,16 @@ void main() {
   game_obj_t bowl;
   bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
   bowl.model = &bowl_obj;
-  bowl.texture = load_texture("/Users/rusty/git/cee-lo/res/Untitled.png", &bowl_tex_w, &bowl_tex_h);
+  bowl.texture = load_texture("/Users/rusty/git/cee-lo/res/bowl.png", &bowl_tex_w, &bowl_tex_h);
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);
   bowl.body = dBodyCreate(world);
-  dBodySetPosition(bowl.body, 0.f, 0.84f, 0.f);
+  dMass mass;
+  dMassSetBox(&mass, 2, 2, 2, 2);
+  dBodySetMass(bowl.body, &mass);
+  dBodySetPosition(bowl.body, 0.f, 0.86f, 0.f);
   dGeomSetBody(bowl.geom, bowl.body);
-  dBodyDestroy(bowl.body);
   update_game_obj(&bowl, 0);
   
 	Uint32 old_time, current_time = SDL_GetTicks();
@@ -324,6 +325,7 @@ void main() {
 
     draw_game_obj(&plane, model_loc, texture_loc);
     
+    update_game_obj(&bowl, 0);
     draw_game_obj(&bowl, model_loc, texture_loc);
     
     glUseProgram(0);
