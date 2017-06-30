@@ -79,8 +79,8 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
     for (int i = 0; i < numc; i++) {
       contact[i].surface.mode   = dContactBounce | dContactSoftCFM;
       contact[i].surface.mu     = dInfinity;
-      contact[i].surface.soft_cfm = 1e-10;
-      contact[i].surface.bounce = 0.3;
+      contact[i].surface.soft_cfm = 0;
+      contact[i].surface.bounce = 0.2;
       
       dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
       dJointAttach (c, b1, b2);
@@ -299,7 +299,8 @@ int main(int argc, const char * argv[]) {
             tmp->mat.specular = vec3_new(.5f, .5f, .5f);
             
             vector_push(&dice, (void*)tmp);
-          }
+          } else if (e.key.keysym.sym == SDLK_c)
+            vector_clear_free(&dice);
           break;
       }
     }
