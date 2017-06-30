@@ -77,12 +77,10 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   int numc = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
   if (numc) {
     for (int i = 0; i < numc; i++) {
-      contact[i].surface.mode   = dContactBounce;
-      contact[i].surface.mu     = 5000.f;
-      contact[i].surface.mu2    = 5000.f;
-      contact[i].surface.soft_cfm = 1e-5;
-      contact[i].surface.soft_erp = 0.8;
-      contact[i].surface.bounce = 0.2;
+      contact[i].surface.mode   = dContactBounce | dContactSoftCFM;
+      contact[i].surface.mu     = dInfinity;
+      contact[i].surface.soft_cfm = 1e-10;
+      contact[i].surface.bounce = 0.3;
       
       dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
       dJointAttach (c, b1, b2);
@@ -185,12 +183,12 @@ int main(int argc, const char * argv[]) {
   cam.pos.y = 1.f;
   
   light_t spotlight;
-  spotlight.position = vec3_new(-0.151597023, 6.74040031, 0.248863786);
-  spotlight.direction = vec3_new(0.0108046653, -0.99984771, -0.0137056522);
+  spotlight.position = vec3_new(0.f, 7.f, 0.f);
+  spotlight.direction = vec3_new(0.f, -1.f, 0.f);
   spotlight.cutOff = cosf(DEG2RAD(12.5f));
   spotlight.outerCutOff = cosf(DEG2RAD(17.5f));
   spotlight.ambient = vec3_new(.1f, .1f, .1f);
-  spotlight.diffuse = vec3_new(.8f, .8f, .8f);
+  spotlight.diffuse = vec3_new(1.f, 1.f, 1.f);
   spotlight.specular = vec3_new(1.f, 1.f, 1.f);
   spotlight.constant = 1.f;
   spotlight.linear = .09f;
@@ -223,8 +221,6 @@ int main(int argc, const char * argv[]) {
   dWorldSetMaxAngularSpeed(world, 200);
   dWorldSetContactMaxCorrectingVel(world, 0.1);
   dWorldSetContactSurfaceLayer(world, 0.001);
-  //  dWorldSetERP(world, 0.8);
-  //  dWorldSetCFM(world, 1e-5);
   contact_group = dJointGroupCreate(0);
   
   game_obj_t plane;
@@ -239,7 +235,6 @@ int main(int argc, const char * argv[]) {
   plane.world = mat4_id();
   
   game_obj_t bowl;
-  bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
   bowl.model = &bowl_obj;
   bowl.mat.texture = load_texture(RES(bowl.png), &bowl_tex_w, &bowl_tex_h);
   bowl.mat.shininess = 32.f;
@@ -247,13 +242,15 @@ int main(int argc, const char * argv[]) {
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);
-  bowl.body = dBodyCreate(world);
-  dMass mass;
-  dMassSetBox(&mass, 2, 2, 2, 2);
-  dBodySetMass(bowl.body, &mass);
-  dBodySetPosition(bowl.body, 0.f, 0.86f, 0.f);
-  dGeomSetBody(bowl.geom, bowl.body);
-  update_game_obj(&bowl, 0);
+  dGeomSetPosition(bowl.geom, 0.f, 0.85f, 0.f);
+  bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
+//  bowl.body = dBodyCreate(world);
+//  dMass mass;
+//  dMassSetBox(&mass, 2, 2, 2, 2);
+//  dBodySetMass(bowl.body, &mass);
+//  dBodySetPosition(bowl.body, 0.f, 0.86f, 0.f);
+//  dGeomSetBody(bowl.geom, bowl.body);
+//  update_game_obj(&bowl, 0);
   
   Uint32 old_time, current_time = SDL_GetTicks();
   float delta;
@@ -358,7 +355,6 @@ int main(int argc, const char * argv[]) {
     
     draw_game_obj(&plane, shader);
     
-    update_game_obj(&bowl, 0);
     draw_game_obj(&bowl, shader);
     
     glUseProgram(0);

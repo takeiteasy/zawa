@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "cee-lo/main.c"
-            timestampString = "520523789.06735"
+            timestampString = "520533698.315567"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "313"
-            endingLineNumber = "313"
+            startingLineNumber = "310"
+            endingLineNumber = "310"
             landmarkName = "main()"
             landmarkType = "9">
          </BreakpointContent>
