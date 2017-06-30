@@ -52,3 +52,22 @@ void free_game_obj(game_obj_t* o) {
   if (o->mat.texture)
     glDeleteTextures(1, &o->mat.texture);
 }
+
+#define LIGHT_VEC3(X) \
+glUniform3f(glGetUniformLocation(shader, "light." #X), l->X.x, l->X.y, l->X.z)
+#define LIGHT_FLOAT(X) \
+glUniform1f(glGetUniformLocation(shader, "light." #X), l->X)
+
+void add_light(light_t* l, GLuint shader) {
+  LIGHT_VEC3(position);
+  LIGHT_VEC3(direction);
+  LIGHT_VEC3(ambient);
+  LIGHT_VEC3(diffuse);
+  LIGHT_VEC3(specular);
+  
+  LIGHT_FLOAT(cutOff);
+  LIGHT_FLOAT(outerCutOff);
+  LIGHT_FLOAT(constant);
+  LIGHT_FLOAT(linear);
+  LIGHT_FLOAT(quadratic);
+}

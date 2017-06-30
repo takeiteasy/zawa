@@ -87,40 +87,6 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   }
 }
 
-typedef struct {
-  vec3 position;
-  vec3 direction;
-  float cutOff;
-  float outerCutOff;
-  
-  vec3 ambient;
-  vec3 diffuse;
-  vec3 specular;
-  
-  float constant;
-  float linear;
-  float quadratic;
-} light_t;
-
-#define LIGHT_VEC3(X) \
-glUniform3f(glGetUniformLocation(shader, "light." #X), l->X.x, l->X.y, l->X.z)
-#define LIGHT_FLOAT(X) \
-glUniform1f(glGetUniformLocation(shader, "light." #X), l->X)
-
-void add_light(light_t* l, GLuint shader) {
-  LIGHT_VEC3(position);
-  LIGHT_VEC3(direction);
-  LIGHT_VEC3(ambient);
-  LIGHT_VEC3(diffuse);
-  LIGHT_VEC3(specular);
-  
-  LIGHT_FLOAT(cutOff);
-  LIGHT_FLOAT(outerCutOff);
-  LIGHT_FLOAT(constant);
-  LIGHT_FLOAT(linear);
-  LIGHT_FLOAT(quadratic);
-}
-
 int main(int argc, const char * argv[]) {
   srand((unsigned int)time(NULL));
   
@@ -177,16 +143,21 @@ int main(int argc, const char * argv[]) {
   
   mat4 p = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
   camera_t cam;
-  camera_init_def(&cam);
-  cam.pos.z = 5.f;
-  cam.pos.y = 1.f;
+  cam.front = vec3_new(-0.0000000377594489, -0.503773987, -0.863835513);
+  cam.pos   = vec3_new(-0.00109344907, 2.23043847, 2.11338186);
+  cam.up    = vec3_new(-0.0000000220206609, 0.863835513, -0.503773987);
+  cam.right = vec3_new(1.f, 0.f, -0.0000000437113883);
+  cam.world = vec3_new(0.f, 1.f, 0.f);
+  cam.yaw   = -90.f;
+  cam.pitch = -30.25f;
+  camera_update(&cam);
   
   light_t spotlight;
   spotlight.position = vec3_new(0.f, 7.f, 0.f);
   spotlight.direction = vec3_new(0.f, -1.f, 0.f);
   spotlight.cutOff = cosf(DEG2RAD(12.5f));
   spotlight.outerCutOff = cosf(DEG2RAD(17.5f));
-  spotlight.ambient = vec3_new(.5f, .5f, .5f);
+  spotlight.ambient = vec3_new(.2f, .2f, .2f);
   spotlight.diffuse = vec3_new(1.f, 1.f, 1.f);
   spotlight.specular = vec3_new(1.f, 1.f, 1.f);
   spotlight.constant = 1.f;
@@ -220,8 +191,8 @@ int main(int argc, const char * argv[]) {
   dWorldSetMaxAngularSpeed(world, 200);
   dWorldSetContactMaxCorrectingVel(world, 0.2);
   dWorldSetContactSurfaceLayer(world, 0.001);
-  dWorldSetCFM(world, 1E-20);
-  dWorldSetERP(world, 1);
+  dWorldSetCFM(world, 1E-13);
+  dWorldSetERP(world, 0.5);
   contact_group = dJointGroupCreate(0);
   
   game_obj_t plane;
@@ -238,8 +209,8 @@ int main(int argc, const char * argv[]) {
   game_obj_t bowl;
   bowl.model = &bowl_obj;
   bowl.mat.texture = load_texture(RES(bowl.png), &bowl_tex_w, &bowl_tex_h);
-  bowl.mat.shininess = 32.f;
-  bowl.mat.specular = vec3_new(.5f, .5f, .5f);
+  bowl.mat.shininess = 64.f;
+  bowl.mat.specular = vec3_new(2.f, 2.f, 2.f);
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);
@@ -269,7 +240,7 @@ int main(int argc, const char * argv[]) {
           running = SDL_FALSE;
           break;
         case SDL_MOUSEMOTION:
-          camera_look(&cam, e.motion.xrel, -e.motion.yrel);
+//          camera_look(&cam, e.motion.xrel, -e.motion.yrel);
           break;
         case SDL_KEYUP:
           if (e.key.keysym.sym == SDLK_z) {
@@ -284,6 +255,7 @@ int main(int argc, const char * argv[]) {
             vec3 rand_euler = vec3_new(rand_angle, rand_angle, rand_angle);
             dRFromEulerAngles(R, rand_euler.x, rand_euler.y, rand_euler.z);
             dBodySetRotation(tmp->body, R);
+            
             
             vec3 vel = vec3_new(force_range, force_range, force_range);
             vec3 force = vec3_mul_vec3(vec3_normalize(cam.front), vel);
@@ -318,18 +290,18 @@ int main(int argc, const char * argv[]) {
     if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
       running_physics = SDL_FALSE;
     
-    if (keys[SDL_GetScancodeFromKey(SDLK_w)])
-      camera_move(&cam, FORWARD);
-    if (keys[SDL_GetScancodeFromKey(SDLK_a)])
-      camera_move(&cam, LEFT);
-    if (keys[SDL_GetScancodeFromKey(SDLK_s)])
-      camera_move(&cam, BACK);
-    if (keys[SDL_GetScancodeFromKey(SDLK_d)])
-      camera_move(&cam, RIGHT);
-    if (keys[SDL_GetScancodeFromKey(SDLK_q)])
-      camera_move(&cam, UP);
-    if (keys[SDL_GetScancodeFromKey(SDLK_e)])
-      camera_move(&cam, DOWN);
+//    if (keys[SDL_GetScancodeFromKey(SDLK_w)])
+//      camera_move(&cam, FORWARD);
+//    if (keys[SDL_GetScancodeFromKey(SDLK_a)])
+//      camera_move(&cam, LEFT);
+//    if (keys[SDL_GetScancodeFromKey(SDLK_s)])
+//      camera_move(&cam, BACK);
+//    if (keys[SDL_GetScancodeFromKey(SDLK_d)])
+//      camera_move(&cam, RIGHT);
+//    if (keys[SDL_GetScancodeFromKey(SDLK_q)])
+//      camera_move(&cam, UP);
+//    if (keys[SDL_GetScancodeFromKey(SDLK_e)])
+//      camera_move(&cam, DOWN);
     
     if (running_physics) {
       dSpaceCollide(space, 0, collide);
@@ -337,7 +309,7 @@ int main(int argc, const char * argv[]) {
       dJointGroupEmpty (contact_group);
     }
     
-    camera_update(&cam);
+//    camera_update(&cam);
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
@@ -366,7 +338,7 @@ int main(int argc, const char * argv[]) {
   
   for (int i = 0; i < dice.length; ++i)
     free_game_obj((game_obj_t*)vector_get(&dice, i));
-  vector_free(&dice);
+  vector_free_all(&dice);
   free_game_obj(&plane);
   dGeomTriMeshDataDestroy(bowl_tri);
   free_game_obj(&bowl);
