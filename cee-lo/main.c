@@ -77,9 +77,8 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   int numc = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
   if (numc) {
     for (int i = 0; i < numc; i++) {
-      contact[i].surface.mode   = dContactBounce | dContactSoftCFM;
+      contact[i].surface.mode   = dContactBounce;
       contact[i].surface.mu     = dInfinity;
-      contact[i].surface.soft_cfm = 0;
       contact[i].surface.bounce = 0.2;
       
       dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
@@ -187,7 +186,7 @@ int main(int argc, const char * argv[]) {
   spotlight.direction = vec3_new(0.f, -1.f, 0.f);
   spotlight.cutOff = cosf(DEG2RAD(12.5f));
   spotlight.outerCutOff = cosf(DEG2RAD(17.5f));
-  spotlight.ambient = vec3_new(.1f, .1f, .1f);
+  spotlight.ambient = vec3_new(.5f, .5f, .5f);
   spotlight.diffuse = vec3_new(1.f, 1.f, 1.f);
   spotlight.specular = vec3_new(1.f, 1.f, 1.f);
   spotlight.constant = 1.f;
@@ -219,7 +218,7 @@ int main(int argc, const char * argv[]) {
   dWorldSetLinearDamping(world, 0.0001);
   dWorldSetAngularDamping(world, 0.005);
   dWorldSetMaxAngularSpeed(world, 200);
-  dWorldSetContactMaxCorrectingVel(world, 0.1);
+  dWorldSetContactMaxCorrectingVel(world, 1.0);
   dWorldSetContactSurfaceLayer(world, 0.001);
   contact_group = dJointGroupCreate(0);
   
