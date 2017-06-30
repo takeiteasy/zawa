@@ -15,8 +15,8 @@ typedef struct {
 #define vector_shift(v) vector_pull(&v, 0)
 #define vector_for_each(v, i) for (int i = 0; i < v.length; ++i)
 
-void	vector_init(vector_t*);
-void	vector_free(vector_t*);
+void  vector_init(vector_t*);
+void  vector_free(vector_t*);
 int   vector_push(vector_t*, void*);
 int   vector_insert(vector_t*, int, void*);
 int   vector_insert_va(vector_t*, int, int, ...);

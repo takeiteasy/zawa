@@ -45,7 +45,7 @@ char* glGetError_str(GLenum err) {
 		case GL_OUT_OF_MEMORY:                 return "OUT_OF_MEMORY"; break;
 		case GL_INVALID_FRAMEBUFFER_OPERATION: return "INVALID_FRAMEBUFFER_OPERATION"; break;
 		default:
-																					 return "Unknown Error";
+      return "Unknown Error";
 	}
 }
 

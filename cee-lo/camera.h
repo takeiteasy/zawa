@@ -31,10 +31,8 @@ enum VIEW_DIRECTION {
 };
 
 typedef struct {
-	struct {
-		vec3 pos, front, up, right, world;
-		GLfloat yaw, pitch, move_speed, sensitivity, zoom;
-	};
+  vec3 pos, front, up, right, world;
+  GLfloat yaw, pitch, move_speed, sensitivity, zoom;
 	mat4 view;
 } camera_t;
 
