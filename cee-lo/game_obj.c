@@ -16,11 +16,14 @@ static mat4 dice_scale = {
 };
 static const dReal *t, *r;
 
-void draw_game_obj(game_obj_t* o, GLuint model_loc, GLuint texture_loc) {
-  glUniformMatrix4fv(model_loc, 1, GL_FALSE, &o->world.m[0]);
+void draw_game_obj(game_obj_t* o, GLuint shader) {
+  glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &o->world.m[0]);
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, o->texture);
-  glUniform1i(texture_loc, 0);
+  glBindTexture(GL_TEXTURE_2D, o->mat.texture);
+  glUniform1i(glGetUniformLocation(shader, "material.diffuse"), 0);
+  glUniform3f(glGetUniformLocation(shader, "material.specular"),
+              o->mat.specular.x, o->mat.specular.y, o->mat.specular.z);
+  glUniform1f(glGetUniformLocation(shader, "material.shininess"), o->mat.shininess);
   
   draw_obj(o->model);
   
@@ -46,6 +49,6 @@ void free_game_obj(game_obj_t* o) {
     free_obj(o->model);
     o->model = NULL;
   }
-  if (o->texture)
-    glDeleteTextures(1, &o->texture);
+  if (o->mat.texture)
+    glDeleteTextures(1, &o->mat.texture);
 }

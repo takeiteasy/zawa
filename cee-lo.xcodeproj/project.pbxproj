@@ -57,6 +57,7 @@
 		D3EA467A1F052F47007EAE1B /* linalgb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = linalgb.c; path = 3rdparty/linalgb.c; sourceTree = "<group>"; };
 		D3EA467B1F052F47007EAE1B /* linalgb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = linalgb.h; path = 3rdparty/linalgb.h; sourceTree = "<group>"; };
 		D3EA468A1F05E9F9007EAE1B /* Icosphere_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Icosphere_obj.h; sourceTree = "<group>"; };
+		D3EA468B1F0677EB007EAE1B /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; path = res; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +77,7 @@
 		D3533D3D1F000A01005AFFDB = {
 			isa = PBXGroup;
 			children = (
+				D3EA468B1F0677EB007EAE1B /* res */,
 				D3533D481F000A01005AFFDB /* cee-lo */,
 				D3533D471F000A01005AFFDB /* Products */,
 				D3533D501F000A09005AFFDB /* Frameworks */,

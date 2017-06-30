@@ -68,8 +68,8 @@ void cleanup() {
 }
 
 void collide(void* data, dGeomID o1, dGeomID o2) {
-  dBodyID b1 = dGeomGetBody(o1);
-  dBodyID b2 = dGeomGetBody(o2);
+  dBodyID b1 = dGeomGetBody(o1),
+          b2 = dGeomGetBody(o2);
   
   if (b1 && b2 && dAreConnectedExcluding(b1, b2, dJointTypeContact))
     return;
@@ -88,6 +88,40 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
       dJointAttach (c, b1, b2);
     }
   }
+}
+
+typedef struct {
+  vec3 position;
+  vec3 direction;
+  float cutOff;
+  float outerCutOff;
+  
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+  
+  float constant;
+  float linear;
+  float quadratic;
+} light_t;
+
+#define LIGHT_VEC3(X) \
+glUniform3f(glGetUniformLocation(shader, "light." #X), l->X.x, l->X.y, l->X.z)
+#define LIGHT_FLOAT(X) \
+glUniform1f(glGetUniformLocation(shader, "light." #X), l->X)
+
+void add_light(light_t* l, GLuint shader) {
+  LIGHT_VEC3(position);
+  LIGHT_VEC3(direction);
+  LIGHT_VEC3(ambient);
+  LIGHT_VEC3(diffuse);
+  LIGHT_VEC3(specular);
+  
+  LIGHT_FLOAT(cutOff);
+  LIGHT_FLOAT(outerCutOff);
+  LIGHT_FLOAT(constant);
+  LIGHT_FLOAT(linear);
+  LIGHT_FLOAT(quadratic);
 }
 
 int main(int argc, const char * argv[]) {
@@ -132,7 +166,7 @@ int main(int argc, const char * argv[]) {
   printf("Version:  %s\n", glGetString(GL_VERSION));
   printf("GLSL:     %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
   
-  glClearColor(220.0f/255.0f, 220.0f/255.0f, 220.0f/255.0f, 1.0f);
+//  glClearColor(220.0f/255.0f, 220.0f/255.0f, 220.0f/255.0f, 1.0f);
   glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
@@ -150,25 +184,35 @@ int main(int argc, const char * argv[]) {
   cam.pos.z = 5.f;
   cam.pos.y = 1.f;
   
+  light_t spotlight;
+  spotlight.position = vec3_new(-0.151597023, 6.74040031, 0.248863786);
+  spotlight.direction = vec3_new(0.0108046653, -0.99984771, -0.0137056522);
+  spotlight.cutOff = cosf(DEG2RAD(12.5f));
+  spotlight.outerCutOff = cosf(DEG2RAD(17.5f));
+  spotlight.ambient = vec3_new(.1f, .1f, .1f);
+  spotlight.diffuse = vec3_new(.8f, .8f, .8f);
+  spotlight.specular = vec3_new(1.f, 1.f, 1.f);
+  spotlight.constant = 1.f;
+  spotlight.linear = .09f;
+  spotlight.quadratic = .032f;
+  
   GLuint shader = load_shader_file(RES(scene.vert.glsl),
                                    RES(scene.frag.glsl));
   
   int cube_tex_w, cube_tex_h,
   bowl_tex_w, bowl_tex_h,
   plane_tex_w, plane_tex_h;
-  GLuint cube_tex  = load_texture(RES(dice.png), &cube_tex_w, &cube_tex_h);
+  GLuint cube_tex = load_texture(RES(dice.png), &cube_tex_w, &cube_tex_h);
   
   obj_t cube_obj, plane_obj, bowl_obj;
   load_obj(&cube_obj,  RES(dice.obj));
   load_obj(&plane_obj, RES(plane.obj));
-  load_obj(&bowl_obj, RES(bowl.obj));
+  load_obj(&bowl_obj,  RES(bowl.obj));
   
   vector_init(&dice);
   
   GLuint projection_loc = glGetUniformLocation(shader, "projection");
-  GLuint view_loc = glGetUniformLocation(shader, "view");
-  GLuint model_loc = glGetUniformLocation(shader, "model");
-  GLuint texture_loc = glGetUniformLocation(shader, "ourTexture");
+  GLuint view_loc       = glGetUniformLocation(shader, "view");
   
   dInitODE();
   world = dWorldCreate();
@@ -186,7 +230,9 @@ int main(int argc, const char * argv[]) {
   game_obj_t plane;
   plane.geom = dCreatePlane(space, 0, 1, 0, 0);
   plane.model = &plane_obj;
-  plane.texture = load_texture(RES(checkered.png), &plane_tex_w, &plane_tex_h);
+  plane.mat.texture = load_texture(RES(checkered.png), &plane_tex_w, &plane_tex_h);
+  plane.mat.shininess = 32.f;
+  plane.mat.specular = vec3_new(.5f, .5f, .5f);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   //plane.world = mat4_mul_mat4(mat4_id(), mat4_scale(vec3_new(5, 5, 5)));
@@ -195,7 +241,9 @@ int main(int argc, const char * argv[]) {
   game_obj_t bowl;
   bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
   bowl.model = &bowl_obj;
-  bowl.texture = load_texture(RES(bowl.png), &bowl_tex_w, &bowl_tex_h);
+  bowl.mat.texture = load_texture(RES(bowl.png), &bowl_tex_w, &bowl_tex_h);
+  bowl.mat.shininess = 32.f;
+  bowl.mat.specular = vec3_new(.5f, .5f, .5f);
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);
@@ -249,7 +297,9 @@ int main(int argc, const char * argv[]) {
             dGeomSetBody(tmp->geom, tmp->body);
             
             tmp->model = &cube_obj;
-            tmp->texture = cube_tex;
+            tmp->mat.texture = cube_tex;
+            tmp->mat.shininess = 32.f;
+            tmp->mat.specular = vec3_new(.5f, .5f, .5f);
             
             vector_push(&dice, (void*)tmp);
           }
@@ -294,19 +344,22 @@ int main(int argc, const char * argv[]) {
     
     glUseProgram(shader);
     
+    add_light(&spotlight, shader);
+    glUniform3f(glGetUniformLocation(shader, "viewPos"), cam.pos.x, cam.pos.y, cam.pos.z);
+    
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
     
     for (int i = 0; i < dice.length; ++i) {
       game_obj_t* tmp = (game_obj_t*)vector_get(&dice, i);
       update_game_obj(tmp, 1);
-      draw_game_obj(tmp, model_loc, texture_loc);
+      draw_game_obj(tmp, shader);
     }
     
-    draw_game_obj(&plane, model_loc, texture_loc);
+    draw_game_obj(&plane, shader);
     
     update_game_obj(&bowl, 0);
-    draw_game_obj(&bowl, model_loc, texture_loc);
+    draw_game_obj(&bowl, shader);
     
     glUseProgram(0);
     

@@ -20,14 +20,20 @@
 #define force_range (frand_range(5.f, 10.f))
 
 typedef struct {
+  GLuint texture;
+  vec3 specular;
+  float shininess;
+} material_t;
+
+typedef struct {
   dGeomID geom;
   dBodyID body;
   mat4 world;
   obj_t* model;
-  GLuint texture;
+  material_t mat;
 } game_obj_t;
 
-void draw_game_obj(game_obj_t*, GLuint, GLuint);
+void draw_game_obj(game_obj_t*, GLuint);
 void update_game_obj(game_obj_t*, int);
 void free_game_obj(game_obj_t*);
 
