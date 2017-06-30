@@ -1,7 +1,7 @@
 #include "vector.h"
 
 #define __VECTOR_ALLOC(v) \
-	v->length = 0; \
+v->length = 0; \
 v->data   = (void**)malloc(sizeof(void*));
 
 #define __VECTOR_CHECK(r) if (id < 0 || id > v->length || !v) return r
@@ -9,7 +9,7 @@ v->data   = (void**)malloc(sizeof(void*));
 #define __VECTOR_DEL(v, id) \
 v->data[id] = NULL; \
 for (int __i__ = id + 1; __i__ < v->length; ++__i__) \
-	v->data[__i__ - 1] = v->data[__i__]; \
+  v->data[__i__ - 1] = v->data[__i__]; \
 v->data[v->length - 1] = NULL; \
 __vector_resize(v, --v->length);
 
