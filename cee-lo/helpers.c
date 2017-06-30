@@ -8,6 +8,24 @@
 
 #include "helpers.h"
 
+char* __load_file(const char* path) {
+  FILE *file = fopen(path, "rb");
+  if (!file) {
+    fprintf(stderr, "fopen \"%s\" failed: %d %s\n", path, errno, strerror(errno));
+    abort();
+  }
+  
+  fseek(file, 0, SEEK_END);
+  size_t length = ftell(file);
+  rewind(file);
+  
+  char *data = (char*)calloc(length + 1, sizeof(char));
+  fread(data, 1, length, file);
+  fclose(file);
+  
+  return data;
+}
+
 GLuint __make_shader(GLenum type, const char* src) {
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
@@ -59,6 +77,18 @@ GLuint __make_program(GLuint vert, GLuint frag) {
 GLuint load_shader_str(const char* vert, const char* frag) {
 	return __make_program(__make_shader(GL_VERTEX_SHADER,		vert),
 												__make_shader(GL_FRAGMENT_SHADER, frag));
+}
+
+GLuint load_shader_file(const char* _vert, const char* _frag) {
+  const char* vert = __load_file(_vert);
+  const char* frag = __load_file(_frag);
+  
+  GLuint ret = __make_program(__make_shader(GL_VERTEX_SHADER,		vert),
+                              __make_shader(GL_FRAGMENT_SHADER, frag));
+  free((char*)vert);
+  free((char*)frag);
+  
+  return ret;
 }
 
 GLuint load_texture(const char* src, int* width, int* height) {

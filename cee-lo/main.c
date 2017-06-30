@@ -17,6 +17,8 @@
 #include "game_obj.h"
 #include "Icosphere_obj.h"
 
+#define RES(X) "/Users/rusty/git/cee-lo/res/" #X
+
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
 static SDL_Window* window;
@@ -148,40 +150,18 @@ int main(int argc, const char * argv[]) {
   cam.pos.z = 5.f;
   cam.pos.y = 1.f;
 	
-	GLuint shader = load_shader_str(
-GLSL(330,
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNorm;
-layout (location = 2) in vec2 aTexCoord;
-                                       
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-
-out vec2 TexCoord;
-
-void main() {
-  gl_Position = projection * view * model* vec4(aPos, 1.0);
-  TexCoord = vec2(aTexCoord.x, -aTexCoord.y);
-}),
-GLSL(330,
-out vec4 FragColor;
-in vec2 TexCoord;
-uniform sampler2D ourTexture;
-
-void main() {
-  FragColor = texture(ourTexture, TexCoord);
-}));
+	GLuint shader = load_shader_file(RES(default.vert.glsl),
+                                   RES(default.frag.glsl));
   
   int cube_tex_w, cube_tex_h,
       bowl_tex_w, bowl_tex_h,
       plane_tex_w, plane_tex_h;
-	GLuint cube_tex  = load_texture("/Users/rusty/git/cee-lo/res/dice.png", &cube_tex_w, &cube_tex_h);
+	GLuint cube_tex  = load_texture(RES(dice.png), &cube_tex_w, &cube_tex_h);
   
 	obj_t cube_obj, plane_obj, bowl_obj;
-	load_obj(&cube_obj,  "/Users/rusty/git/cee-lo/res/dice.obj");
-  load_obj(&plane_obj, "/Users/rusty/git/cee-lo/res/plane.obj");
-  load_obj(&bowl_obj, "/Users/rusty/git/cee-lo/res/bowl.obj");
+	load_obj(&cube_obj,  RES(dice.obj));
+  load_obj(&plane_obj, RES(plane.obj));
+  load_obj(&bowl_obj, RES(bowl.obj));
   
   vector_init(&dice);
   
@@ -206,7 +186,7 @@ void main() {
   game_obj_t plane;
   plane.geom = dCreatePlane(space, 0, 1, 0, 0);
   plane.model = &plane_obj;
-  plane.texture = load_texture("/Users/rusty/git/cee-lo/res/checkered.png", &plane_tex_w, &plane_tex_h);
+  plane.texture = load_texture(RES(checkered.png), &plane_tex_w, &plane_tex_h);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   //plane.world = mat4_mul_mat4(mat4_id(), mat4_scale(vec3_new(5, 5, 5)));
@@ -215,7 +195,7 @@ void main() {
   game_obj_t bowl;
   bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
   bowl.model = &bowl_obj;
-  bowl.texture = load_texture("/Users/rusty/git/cee-lo/res/bowl.png", &bowl_tex_w, &bowl_tex_h);
+  bowl.texture = load_texture(RES(bowl.png), &bowl_tex_w, &bowl_tex_h);
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);

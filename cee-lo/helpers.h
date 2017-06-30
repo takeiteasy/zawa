@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "3rdparty/glad.h"
 #define STBI_ONLY_PNG
@@ -25,7 +26,7 @@
 #define GLSL(VERSION,CODE) "#version " #VERSION "\n" #CODE
 
 GLuint load_shader_str(const char*, const char*);
-// GLuint load_shader_file(const char*, const char*);
+GLuint load_shader_file(const char*, const char*);
 GLuint load_texture(const char*, int*, int*);
 
 #endif /* helper_h */
