@@ -77,8 +77,8 @@
 		D3533D3D1F000A01005AFFDB = {
 			isa = PBXGroup;
 			children = (
-				D3EA468B1F0677EB007EAE1B /* res */,
 				D3533D481F000A01005AFFDB /* cee-lo */,
+				D3EA468B1F0677EB007EAE1B /* res */,
 				D3533D471F000A01005AFFDB /* Products */,
 				D3533D501F000A09005AFFDB /* Frameworks */,
 			);

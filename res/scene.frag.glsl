@@ -56,5 +56,5 @@ void main() {
     FragColor = vec4(result, 1.0);
   }
   else
-    FragColor = vec4((light.ambient / 2) * texture(material.diffuse, TexCoords).rgb, 1.0);
+    FragColor = vec4(vec3(.1f, .1f, .1f) * texture(material.diffuse, TexCoords).rgb, 1.0);
 }

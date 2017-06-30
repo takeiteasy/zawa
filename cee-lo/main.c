@@ -30,6 +30,8 @@ static dJointGroupID contact_group;
 static dContact contact[MAX_CONTACTS];
 static vector_t dice;
 
+#undef GLAD_DEBUG
+
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
   printf("Calling: %s (%d arguments)\n", name, len_args);
@@ -157,7 +159,7 @@ int main(int argc, const char * argv[]) {
   spotlight.direction = vec3_new(0.f, -1.f, 0.f);
   spotlight.cutOff = cosf(DEG2RAD(12.5f));
   spotlight.outerCutOff = cosf(DEG2RAD(17.5f));
-  spotlight.ambient = vec3_new(.2f, .2f, .2f);
+  spotlight.ambient = vec3_new(.5f, .5f, .5f);
   spotlight.diffuse = vec3_new(1.f, 1.f, 1.f);
   spotlight.specular = vec3_new(1.f, 1.f, 1.f);
   spotlight.constant = 1.f;
@@ -240,7 +242,9 @@ int main(int argc, const char * argv[]) {
           running = SDL_FALSE;
           break;
         case SDL_MOUSEMOTION:
-//          camera_look(&cam, e.motion.xrel, -e.motion.yrel);
+#ifdef GLAD_DEBUG
+          camera_look(&cam, e.motion.xrel, -e.motion.yrel);
+#endif
           break;
         case SDL_KEYUP:
           if (e.key.keysym.sym == SDLK_z) {
@@ -289,27 +293,29 @@ int main(int argc, const char * argv[]) {
     
     if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
       running_physics = SDL_FALSE;
+
+#ifdef GLAD_DEBUG
+    if (keys[SDL_GetScancodeFromKey(SDLK_w)])
+      camera_move(&cam, FORWARD);
+    if (keys[SDL_GetScancodeFromKey(SDLK_a)])
+      camera_move(&cam, LEFT);
+    if (keys[SDL_GetScancodeFromKey(SDLK_s)])
+      camera_move(&cam, BACK);
+    if (keys[SDL_GetScancodeFromKey(SDLK_d)])
+      camera_move(&cam, RIGHT);
+    if (keys[SDL_GetScancodeFromKey(SDLK_q)])
+      camera_move(&cam, UP);
+    if (keys[SDL_GetScancodeFromKey(SDLK_e)])
+      camera_move(&cam, DOWN);
     
-//    if (keys[SDL_GetScancodeFromKey(SDLK_w)])
-//      camera_move(&cam, FORWARD);
-//    if (keys[SDL_GetScancodeFromKey(SDLK_a)])
-//      camera_move(&cam, LEFT);
-//    if (keys[SDL_GetScancodeFromKey(SDLK_s)])
-//      camera_move(&cam, BACK);
-//    if (keys[SDL_GetScancodeFromKey(SDLK_d)])
-//      camera_move(&cam, RIGHT);
-//    if (keys[SDL_GetScancodeFromKey(SDLK_q)])
-//      camera_move(&cam, UP);
-//    if (keys[SDL_GetScancodeFromKey(SDLK_e)])
-//      camera_move(&cam, DOWN);
+    camera_update(&cam);
+#endif
     
     if (running_physics) {
       dSpaceCollide(space, 0, collide);
       dWorldQuickStep(world, 1.f / 60.f);
       dJointGroupEmpty (contact_group);
     }
-    
-//    camera_update(&cam);
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
