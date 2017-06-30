@@ -218,8 +218,10 @@ int main(int argc, const char * argv[]) {
   dWorldSetLinearDamping(world, 0.0001);
   dWorldSetAngularDamping(world, 0.005);
   dWorldSetMaxAngularSpeed(world, 200);
-  dWorldSetContactMaxCorrectingVel(world, 1.0);
+  dWorldSetContactMaxCorrectingVel(world, 0.2);
   dWorldSetContactSurfaceLayer(world, 0.001);
+  dWorldSetCFM(world, 1E-20);
+  dWorldSetERP(world, 1);
   contact_group = dJointGroupCreate(0);
   
   game_obj_t plane;
