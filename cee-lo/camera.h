@@ -9,7 +9,6 @@
 #ifndef camera_h
 #define camera_h
 
-#include <math.h>
 #include "3rdparty/linalgb.h"
 #include "3rdparty/glad.h"
 #include <SDL2/SDL_keyboard.h>
