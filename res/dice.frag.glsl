@@ -32,19 +32,24 @@ uniform Material material;
 uniform Light light;
 
 void main() {
+  vec2 bl = step(vec2(0.7, 0.7), vec2(TexCoords.x, -TexCoords.y) + fract(gl_FragCoord.xy * vec2(64.f)));
+  vec3 tex = vec3(bl.x * bl.y);
+  if (tex.x == 0 && tex.y == 0 && tex.z == 0)
+    tex = vec3(1.f, 0.f, 0.f);
+  
   vec3 lightDir = normalize(light.position - FragPos);
   float theta = dot(lightDir, normalize(-light.direction));
   
   if (theta > light.cutOff) {
-    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
+    vec3 ambient = light.ambient * tex;
     
     vec3 norm = normalize(Normal);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
+    vec3 diffuse = light.diffuse * diff * tex;
     
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.f);
     vec3 specular = light.specular * spec * material.specular;
     
     float distance    = length(light.position - FragPos);
@@ -57,5 +62,5 @@ void main() {
     FragColor = vec4(result, 1.0);
   }
   else
-    FragColor = vec4(vec3(.1f) * texture(material.diffuse, TexCoords).rgb, 1.0);
+    FragColor = vec4(vec3(.1f) * tex, 1.0);
 }

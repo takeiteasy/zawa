@@ -18,8 +18,10 @@ static const dReal *t, *r;
 
 void draw_game_obj(game_obj_t* o, GLuint shader) {
   glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &o->world.m[0]);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, o->mat.texture);
+  if (o->mat.texture) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, o->mat.texture);
+  }
   glUniform1i(glGetUniformLocation(shader, "material.diffuse"), 0);
   glUniform3f(glGetUniformLocation(shader, "material.specular"),
               o->mat.specular.x, o->mat.specular.y, o->mat.specular.z);

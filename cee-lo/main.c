@@ -170,12 +170,11 @@ int main(int argc, const char * argv[]) {
   GLuint shader = load_shader_file(RES(default.vert.glsl),
                                    RES(default.frag.glsl));
   
-  GLuint test_shader = load_shader_file(RES(default.vert.glsl),
+  GLuint plane_shader = load_shader_file(RES(default.vert.glsl),
                                         RES(plane.frag.glsl));
   
-  int cube_tex_w, cube_tex_h,
-      bowl_tex_w, bowl_tex_h;
-  GLuint cube_tex = load_texture(RES(dice.png), &cube_tex_w, &cube_tex_h);
+  GLuint dice_shader = load_shader_file(RES(default.vert.glsl),
+                                        RES(dice.frag.glsl));
   
   obj_t cube_obj, plane_obj, bowl_obj;
   load_obj(&cube_obj,  RES(dice.obj));
@@ -187,10 +186,15 @@ int main(int argc, const char * argv[]) {
   GLuint projection_loc    = glGetUniformLocation(shader, "projection");
   GLuint view_loc          = glGetUniformLocation(shader, "view");
   GLuint viewPos_loc       = glGetUniformLocation(shader, "viewPos");
-  GLuint plane_proj_loc    = glGetUniformLocation(test_shader, "projection");
-  GLuint plane_view_loc    = glGetUniformLocation(test_shader, "view");
-  GLuint plane_model_loc   = glGetUniformLocation(test_shader, "model");
-  GLuint plane_viewPos_loc = glGetUniformLocation(test_shader, "viewPos");
+  
+  GLuint plane_proj_loc    = glGetUniformLocation(plane_shader, "projection");
+  GLuint plane_view_loc    = glGetUniformLocation(plane_shader, "view");
+  GLuint plane_model_loc   = glGetUniformLocation(plane_shader, "model");
+  GLuint plane_viewPos_loc = glGetUniformLocation(plane_shader, "viewPos");
+  
+  GLuint dice_proj_loc    = glGetUniformLocation(dice_shader, "projection");
+  GLuint dice_view_loc    = glGetUniformLocation(dice_shader, "view");
+  GLuint dice_viewPos_loc = glGetUniformLocation(dice_shader, "viewPos");
   
   dInitODE();
   world = dWorldCreate();
@@ -212,6 +216,7 @@ int main(int argc, const char * argv[]) {
   
   game_obj_t bowl;
   bowl.model = &bowl_obj;
+  int bowl_tex_w, bowl_tex_h;
   bowl.mat.texture = load_texture(RES(terracotta.png), &bowl_tex_w, &bowl_tex_h);
   bowl.mat.shininess = 40.f;
   bowl.mat.specular = vec3_new(2.f, 2.f, 2.f);
@@ -262,7 +267,6 @@ int main(int argc, const char * argv[]) {
             dRFromEulerAngles(R, rand_euler.x, rand_euler.y, rand_euler.z);
             dBodySetRotation(tmp->body, R);
             
-            
             vec3 vel = vec3_new(force_range, force_range, force_range);
             vec3 force = vec3_mul_vec3(vec3_normalize(cam.front), vel);
             dBodySetLinearVel(tmp->body, force.x, force.y, force.z);
@@ -273,7 +277,7 @@ int main(int argc, const char * argv[]) {
             dGeomSetBody(tmp->geom, tmp->body);
             
             tmp->model = &cube_obj;
-            tmp->mat.texture = cube_tex;
+            tmp->mat.texture = 0;
             tmp->mat.shininess = 32.f;
             tmp->mat.specular = vec3_new(.5f, .5f, .5f);
             
@@ -317,21 +321,29 @@ int main(int argc, const char * argv[]) {
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
     
+    draw_game_obj(&bowl, shader);
+    
+    glUseProgram(dice_shader);
+    
+    glUniformMatrix4fv(dice_proj_loc,  1, GL_FALSE, &p.m[0]);
+    glUniformMatrix4fv(dice_view_loc,  1, GL_FALSE, &cam.view.m[0]);
+    
+    add_light(&spotlight, dice_shader);
+    glUniform3f(dice_viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
+    
     for (int i = 0; i < dice.length; ++i) {
       game_obj_t* tmp = (game_obj_t*)vector_get(&dice, i);
       update_game_obj(tmp, 1);
-      draw_game_obj(tmp, shader);
+      draw_game_obj(tmp, dice_shader);
     }
     
-    draw_game_obj(&bowl, shader);
-    
-    glUseProgram(test_shader);
+    glUseProgram(plane_shader);
     
     glUniformMatrix4fv(plane_proj_loc,  1, GL_FALSE, &p.m[0]);
     glUniformMatrix4fv(plane_view_loc,  1, GL_FALSE, &cam.view.m[0]);
     glUniformMatrix4fv(plane_model_loc, 1, GL_FALSE, &plane.world.m[0]);
     
-    add_light(&spotlight, test_shader);
+    add_light(&spotlight, plane_shader);
     glUniform3f(plane_viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
     
     draw_obj(&plane_obj);
