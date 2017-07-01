@@ -30,7 +30,7 @@ static dJointGroupID contact_group;
 static dContact contact[MAX_CONTACTS];
 static vector_t dice;
 
-//#undef GLAD_DEBUG
+#undef GLAD_DEBUG
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {

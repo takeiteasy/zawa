@@ -14,13 +14,9 @@
 #include "3rdparty/glad.h"
 #include <SDL2/SDL_keyboard.h>
 
-#define PI180 .01745329251994329576f
-#define DEG2RAD(X) (X * PI180)
-#define RAD2DEG(X) ((X * 180.f) / M_PI)
+#define DEG2RAD(X) (X * .01745329251994329576f)
 
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
 typedef struct {
   vec3 pos, front, up, right, world;
@@ -29,7 +25,7 @@ typedef struct {
 } camera_t;
 
 void camera_init_def(camera_t*);
-void camera_init(camera_t* cam, vec3 a, vec3 b, float y, float p);
+void camera_init(camera_t*, vec3, vec3, float, float);
 void camera_update(camera_t*);
 void camera_move(camera_t*, const Uint8*);
 void camera_look(camera_t*, int, int);
