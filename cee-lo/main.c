@@ -101,7 +101,7 @@ int main(int argc, const char * argv[]) {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   
-  window = SDL_CreateWindow("im not gay",
+  window = SDL_CreateWindow("ざわ。。。ざわ。。。",
                             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                             SCREEN_WIDTH, SCREEN_HEIGHT,
                             SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
@@ -360,6 +360,8 @@ int main(int argc, const char * argv[]) {
   dGeomTriMeshDataDestroy(bowl_tri);
   free_game_obj(&bowl);
   glDeleteProgram(shader);
+  glDeleteProgram(plane_shader);
+  glDeleteProgram(dice_shader);
   
   return 0;
 }

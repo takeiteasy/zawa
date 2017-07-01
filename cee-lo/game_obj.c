@@ -47,6 +47,8 @@ void update_game_obj(game_obj_t* o, int scale) {
 void free_game_obj(game_obj_t* o) {
   if (o->geom)
     dGeomDestroy(o->geom);
+  if (o->body)
+    dBodyDestroy(o->body);
   if (o->model) {
     free_obj(o->model);
     o->model = NULL;
