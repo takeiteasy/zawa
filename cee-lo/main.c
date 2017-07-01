@@ -30,7 +30,7 @@ static dJointGroupID contact_group;
 static dContact contact[MAX_CONTACTS];
 static vector_t dice;
 
-#undef GLAD_DEBUG
+//#undef GLAD_DEBUG
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
@@ -145,6 +145,7 @@ int main(int argc, const char * argv[]) {
   
   mat4 p = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
   camera_t cam;
+  camera_init_def(&cam);
   cam.front = vec3_new(-0.0000000377594489, -0.503773987, -0.863835513);
   cam.pos   = vec3_new(-0.00109344907, 2.23043847, 2.11338186);
   cam.up    = vec3_new(-0.0000000220206609, 0.863835513, -0.503773987);
@@ -211,7 +212,7 @@ int main(int argc, const char * argv[]) {
   game_obj_t bowl;
   bowl.model = &bowl_obj;
   bowl.mat.texture = load_texture(RES(bowl.png), &bowl_tex_w, &bowl_tex_h);
-  bowl.mat.shininess = 64.f;
+  bowl.mat.shininess = 40.f;
   bowl.mat.specular = vec3_new(2.f, 2.f, 2.f);
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
@@ -295,19 +296,7 @@ int main(int argc, const char * argv[]) {
       running_physics = SDL_FALSE;
 
 #ifdef GLAD_DEBUG
-    if (keys[SDL_GetScancodeFromKey(SDLK_w)])
-      camera_move(&cam, FORWARD);
-    if (keys[SDL_GetScancodeFromKey(SDLK_a)])
-      camera_move(&cam, LEFT);
-    if (keys[SDL_GetScancodeFromKey(SDLK_s)])
-      camera_move(&cam, BACK);
-    if (keys[SDL_GetScancodeFromKey(SDLK_d)])
-      camera_move(&cam, RIGHT);
-    if (keys[SDL_GetScancodeFromKey(SDLK_q)])
-      camera_move(&cam, UP);
-    if (keys[SDL_GetScancodeFromKey(SDLK_e)])
-      camera_move(&cam, DOWN);
-    
+    camera_move(&cam, keys);
     camera_update(&cam);
 #endif
     

@@ -44,27 +44,19 @@ void camera_update(camera_t* cam) {
   cam->view  = mat4_view_look_at(cam->pos, vec3_add(cam->pos, cam->front), cam->up);
 }
 
-void camera_move(camera_t* cam, const enum VIEW_DIRECTION d) {
-  switch (d) {
-    case UP:
-      cam->pos = vec3_add(cam->pos, vec3_mul(cam->up, cam->move_speed));
-      break;
-    case DOWN:
-      cam->pos = vec3_sub(cam->pos, vec3_mul(cam->up, cam->move_speed));
-      break;
-    case RIGHT:
-      cam->pos = vec3_add(cam->pos, vec3_mul(vec3_normalize(vec3_cross(cam->front, cam->up)), cam->move_speed));
-      break;
-    case LEFT:
-      cam->pos = vec3_sub(cam->pos, vec3_mul(vec3_normalize(vec3_cross(cam->front, cam->up)), cam->move_speed));
-      break;
-    case FORWARD:
-      cam->pos = vec3_add(cam->pos, vec3_mul(cam->front, cam->move_speed));
-      break;
-    case BACK:
-      cam->pos = vec3_sub(cam->pos, vec3_mul(cam->front, cam->move_speed));
-      break;
-  }
+void camera_move(camera_t* cam, const Uint8* keys) {
+  if (keys[SDL_GetScancodeFromKey(SDLK_w)])
+    cam->pos = vec3_add(cam->pos, vec3_mul(cam->front, cam->move_speed));
+  if (keys[SDL_GetScancodeFromKey(SDLK_a)])
+    cam->pos = vec3_sub(cam->pos, vec3_mul(vec3_normalize(vec3_cross(cam->front, cam->up)), cam->move_speed));
+  if (keys[SDL_GetScancodeFromKey(SDLK_s)])
+    cam->pos = vec3_sub(cam->pos, vec3_mul(cam->front, cam->move_speed));
+  if (keys[SDL_GetScancodeFromKey(SDLK_d)])
+    cam->pos = vec3_add(cam->pos, vec3_mul(vec3_normalize(vec3_cross(cam->front, cam->up)), cam->move_speed));
+  if (keys[SDL_GetScancodeFromKey(SDLK_q)])
+    cam->pos = vec3_add(cam->pos, vec3_mul(cam->up, cam->move_speed));
+  if (keys[SDL_GetScancodeFromKey(SDLK_e)])
+    cam->pos = vec3_sub(cam->pos, vec3_mul(cam->up, cam->move_speed));
 }
 
 void camera_look(camera_t* cam, int x, int y) {
