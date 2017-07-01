@@ -159,7 +159,7 @@ int main(int argc, const char * argv[]) {
   spotlight.position = vec3_new(0.f, 7.f, 0.f);
   spotlight.direction = vec3_new(0.f, -1.f, 0.f);
   spotlight.cutOff = cosf(DEG2RAD(12.5f));
-  spotlight.outerCutOff = cosf(DEG2RAD(17.5f));
+  spotlight.outerCutOff = cosf(DEG2RAD(40.5f));
   spotlight.ambient = vec3_new(.5f, .5f, .5f);
   spotlight.diffuse = vec3_new(1.f, 1.f, 1.f);
   spotlight.specular = vec3_new(1.f, 1.f, 1.f);
@@ -218,8 +218,8 @@ int main(int argc, const char * argv[]) {
   bowl.model = &bowl_obj;
   int bowl_tex_w, bowl_tex_h;
   bowl.mat.texture = load_texture(RES(terracotta.png), &bowl_tex_w, &bowl_tex_h);
-  bowl.mat.shininess = 40.f;
-  bowl.mat.specular = vec3_new(2.f, 2.f, 2.f);
+  bowl.mat.shininess = 1.f;
+  bowl.mat.specular = vec3_new(.25f, .25f, .25f);
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);

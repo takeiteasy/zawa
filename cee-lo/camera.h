@@ -14,6 +14,7 @@
 #include <SDL2/SDL_keyboard.h>
 
 #define DEG2RAD(X) (X * .01745329251994329576f)
+
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
 typedef struct {
