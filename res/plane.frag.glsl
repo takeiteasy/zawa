@@ -81,8 +81,8 @@ void main() {
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);
   }
-  else if (theta > light.outerCutOff)
-    FragColor = vec4(vec3(.08f * theta * 4) * tex, 1.0);
+//  else if (theta > light.outerCutOff)
+//    FragColor = vec4(vec3(.08f * theta * 4) * tex, 1.0);
   else
     FragColor = vec4(vec3(.06f * theta * 2) * tex, 1.0);
 }
