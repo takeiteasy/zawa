@@ -50,7 +50,7 @@ float box(vec2 _st, vec2 _size, float _smoothEdges){
 void main() {
   vec3 tex = vec3(box(rotate2D(tile(TexCoords.st + fract(gl_FragCoord.xy * vec2(512.f)), 24.), PI * 0.25), vec2(0.7), 0.01));
   if (tex.x != 1 && tex.y != 1 && tex.z != 1)
-    tex = vec3(1.f, 0.f, 0.f);
+    tex = vec3(.2f, .2f, .2f);
   
   vec3 lightDir = normalize(light.position - FragPos);
   float theta = dot(lightDir, normalize(-light.direction));
@@ -84,5 +84,5 @@ void main() {
 //  else if (theta > light.outerCutOff)
 //    FragColor = vec4(vec3(.08f * theta * 4) * tex, 1.0);
   else
-    FragColor = vec4(vec3(.06f * theta * 2) * tex, 1.0);
+    FragColor = vec4(vec3(.08f * theta * 1.5f) * tex, 1.0);
 }

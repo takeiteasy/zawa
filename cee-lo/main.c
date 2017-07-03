@@ -153,13 +153,15 @@ int main(int argc, const char * argv[]) {
   cam.world = vec3_new(0.f, 1.f, 0.f);
   cam.yaw   = -90.f;
   cam.pitch = -30.25f;
+#ifndef GLAD_DEBUG
   camera_update(&cam);
+#endif
   
   light_t spotlight;
   spotlight.position = vec3_new(0.f, 7.f, 0.f);
   spotlight.direction = vec3_new(0.f, -1.f, 0.f);
   spotlight.cutOff = cosf(DEG2RAD(12.5f));
-  spotlight.outerCutOff = cosf(DEG2RAD(40.5f));
+  spotlight.outerCutOff = cosf(DEG2RAD(17.5f));
   spotlight.ambient = vec3_new(.5f, .5f, .5f);
   spotlight.diffuse = vec3_new(1.f, 1.f, 1.f);
   spotlight.specular = vec3_new(1.f, 1.f, 1.f);
