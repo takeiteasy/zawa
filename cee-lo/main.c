@@ -12,7 +12,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "camera.h"
 #include "vector.h"
 #include "game_obj.h"
 #include "Icosphere_obj.h"
@@ -163,20 +162,13 @@ int main(int argc, const char * argv[]) {
   
   atexit(cleanup);
   
-  mat4 p = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
-  camera_t cam;
-  camera_init_def(&cam);
-  cam.front = vec3_new(-0.0000000377594489, -0.503773987, -0.863835513);
-  cam.pos   = vec3_new(-0.00109344907, 2.23043847, 2.11338186);
-  cam.up    = vec3_new(-0.0000000220206609, 0.863835513, -0.503773987);
-  cam.right = vec3_new(1.f, 0.f, -0.0000000437113883);
-  cam.world = vec3_new(0.f, 1.f, 0.f);
-  cam.yaw   = -90.f;
-  cam.pitch = -30.25f;
+  mat4 proj = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
   
-//  mat4 view = mat4_view_look_at(vec3_new(0.f, 2.f, 2.2f),
-//                                vec3_new(0.f, .8f, 0.f),
-//                                vec3_new(0.f, 1.f, 0.f));
+  vec3 view_pos = vec3_new(0.f, 2.f, 2.2f);
+  mat4 view = mat4_view_look_at(view_pos,
+                                vec3_new(0.f, .8f, 0.f),
+                                vec3_new(0.f, 1.f, 0.f));
+  vec3 fire_forward = vec3_new(0.f, -0.5f, -.86f);
   
   light_t spotlight;
   spotlight.position = vec3_new(0.f, 7.f, 0.f);
@@ -244,13 +236,6 @@ int main(int argc, const char * argv[]) {
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);
   dGeomSetPosition(bowl.geom, 0.f, 0.85f, 0.f);
   bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
-//  bowl.body = dBodyCreate(world);
-//  dMass mass;
-//  dMassSetBox(&mass, 2, 2, 2, 2);
-//  dBodySetMass(bowl.body, &mass);
-//  dBodySetPosition(bowl.body, 0.f, 0.86f, 0.f);
-//  dGeomSetBody(bowl.geom, bowl.body);
-//  update_game_obj(&bowl, 0);
   
   mat4 hand_world = mat4_mul_mat4(mat4_mul_mat4(mat4_id(),
                                                 mat4_scale(vec3_new(.05f, .05f, .05f))),
@@ -258,8 +243,8 @@ int main(int argc, const char * argv[]) {
   
   Uint32 old_time, current_time = SDL_GetTicks();
   float delta;
-  SDL_bool running = SDL_TRUE, running_physics;
-  const Uint8* keys;
+  
+  SDL_bool running = SDL_TRUE;
   SDL_Event e;
   while (running) {
     old_time = current_time;
@@ -272,12 +257,12 @@ int main(int argc, const char * argv[]) {
           running = SDL_FALSE;
           break;
         case SDL_MOUSEMOTION:
-          hand_world = mat4_mul_mat4(hand_world, mat4_translation(vec3_new(e.motion.xrel, -e.motion.yrel, 0)));
-          hand_world.yw = clamp(hand_world.yw, 1.f, 2.1f);
-          hand_world.xw = clamp(hand_world.xw, -.75f, .5f);
+          hand_world = mat4_mul_mat4(hand_world, mat4_translation(vec3_new((float)e.motion.xrel * .05f, -(float)e.motion.yrel * .05f, 0)));
+          hand_world.yw = clamp(hand_world.yw, 1.3f, 2.f);
+          hand_world.xw = clamp(hand_world.xw, -.5f, .45f);
           break;
         case SDL_KEYUP:
-          if (e.key.keysym.sym == SDLK_z) {
+          if (e.key.keysym.sym == SDLK_SPACE) {
             game_obj_t* tmp = (game_obj_t*)malloc(sizeof(game_obj_t));
             tmp->body = dBodyCreate(world);
             dMass mass;
@@ -291,9 +276,9 @@ int main(int argc, const char * argv[]) {
             dBodySetRotation(tmp->body, R);
             
             vec3 vel = vec3_new(force_range, force_range, force_range);
-            vec3 force = vec3_mul_vec3(vec3_normalize(cam.front), vel);
+            vec3 force = vec3_mul_vec3(vec3_normalize(fire_forward), vel);
             dBodySetLinearVel(tmp->body, force.x, force.y, force.z);
-            force = vec3_cross(cam.front, vec3_mul(vec3_neg(vel), 3.f));
+            force = vec3_cross(fire_forward, vec3_mul(vec3_neg(vel), 3.f));
             dBodySetAngularVel(tmp->body, force.x, force.y, force.z);
             
             tmp->geom = dCreateBox(space, .2, .2, .2);
@@ -306,56 +291,39 @@ int main(int argc, const char * argv[]) {
             
             vector_push(&dice, (void*)tmp);
           }
-          else if (e.key.keysym.sym == SDLK_c)
+          else if (e.key.keysym.sym == SDLK_ESCAPE)
             vector_clear_free_with(&dice, remove_die);
-          else if (e.key.keysym.sym == SDLK_x) {
+          else if (e.key.keysym.sym == SDLK_c) {
             plane_color = vec3_new(frand_01, frand_01, frand_01);
-            die_color = vec3_new(frand_01, frand_01, frand_01);
+            die_color = vec3_new(1.f - plane_color.x, 1.f - plane_color.y, 1.f - plane_color.z);
           }
           break;
       }
     }
     
-    keys = SDL_GetKeyboardState(NULL);
-    
-    if (keys[SDL_GetScancodeFromKey(SDLK_b)])
-      printf("BREAK\n");
-    
-    if (keys[SDL_GetScancodeFromKey(SDLK_ESCAPE)])
-      running = SDL_FALSE;
-    
-    running_physics = SDL_TRUE;
-    if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
-      running_physics = SDL_FALSE;
-
-    camera_move(&cam, keys);
-    camera_update(&cam);
-    
-    if (running_physics) {
-      dSpaceCollide(space, 0, collide);
-      dWorldQuickStep(world, 1.f / 60.f);
-      dJointGroupEmpty (contact_group);
-    }
+    dSpaceCollide(space, 0, collide);
+    dWorldQuickStep(world, 1.f / 60.f);
+    dJointGroupEmpty (contact_group);
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glUseProgram(bowl_shader);
     
     add_light(&spotlight, bowl_shader);
-    glUniform3f(viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
+    glUniform3f(viewPos_loc, view_pos.x, view_pos.y, view_pos.z);
     
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &proj.m[0]);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view.m[0]);
     
     draw_game_obj(&bowl, bowl_shader);
     
     glUseProgram(dice_shader);
     
-    glUniformMatrix4fv(dice_proj_loc,  1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(dice_view_loc,  1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(dice_proj_loc,  1, GL_FALSE, &proj.m[0]);
+    glUniformMatrix4fv(dice_view_loc,  1, GL_FALSE, &view.m[0]);
     
     add_light(&spotlight, dice_shader);
-    glUniform3f(dice_viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
+    glUniform3f(dice_viewPos_loc, view_pos.x, view_pos.y, view_pos.z);
     glUniform3f(dice_color_loc, die_color.x, die_color.y, die_color.z);
     
     for (int i = 0; i < dice.length; ++i) {
@@ -366,20 +334,20 @@ int main(int argc, const char * argv[]) {
     
     glUseProgram(plane_shader);
     
-    glUniformMatrix4fv(plane_proj_loc,  1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(plane_view_loc,  1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(plane_proj_loc,  1, GL_FALSE, &proj.m[0]);
+    glUniformMatrix4fv(plane_view_loc,  1, GL_FALSE, &view.m[0]);
     glUniformMatrix4fv(plane_model_loc, 1, GL_FALSE, &plane.world.m[0]);
     
     add_light(&spotlight, plane_shader);
-    glUniform3f(plane_viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
+    glUniform3f(plane_viewPos_loc, view_pos.x, view_pos.y, view_pos.z);
     glUniform3f(plane_color_loc, plane_color.x, plane_color.y, plane_color.z);
     
     draw_obj(&plane_obj);
     
     glUseProgram(hand_shader);
     
-    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "projection"),  1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "view"),  1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "projection"),  1, GL_FALSE, &proj.m[0]);
+    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "view"),  1, GL_FALSE, &view.m[0]);
     glUniformMatrix4fv(glGetUniformLocation(hand_shader, "model"), 1, GL_FALSE, &hand_world.m[0]);
     
     glActiveTexture(GL_TEXTURE0);

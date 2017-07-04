@@ -14,7 +14,6 @@
 		D3533D541F000A1A005AFFDB /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D531F000A1A005AFFDB /* libSDL2-2.0.0.dylib */; };
 		D3533D601F00159B005AFFDB /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* helpers.c */; };
 		D3533D651F006F4B005AFFDB /* obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D631F006F4B005AFFDB /* obj.c */; };
-		D3533D681F008619005AFFDB /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D661F008619005AFFDB /* camera.c */; };
 		D3EA46711F051C88007EAE1B /* game_obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA466F1F051C88007EAE1B /* game_obj.c */; };
 		D3EA467C1F052F47007EAE1B /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA46751F052F47007EAE1B /* stb_image.c */; };
 		D3EA467D1F052F47007EAE1B /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA46771F052F47007EAE1B /* glad.c */; };
@@ -45,8 +44,6 @@
 		D3533D611F004E59005AFFDB /* libode.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libode.6.dylib; path = ../../../../usr/local/Cellar/ode/0.14_1/lib/libode.6.dylib; sourceTree = "<group>"; };
 		D3533D631F006F4B005AFFDB /* obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = obj.c; sourceTree = "<group>"; };
 		D3533D641F006F4B005AFFDB /* obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = obj.h; sourceTree = "<group>"; };
-		D3533D661F008619005AFFDB /* camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
-		D3533D671F008619005AFFDB /* camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
 		D3EA466F1F051C88007EAE1B /* game_obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = game_obj.c; sourceTree = "<group>"; };
 		D3EA46701F051C88007EAE1B /* game_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game_obj.h; sourceTree = "<group>"; };
 		D3EA46751F052F47007EAE1B /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = stb_image.c; path = 3rdparty/stb_image.c; sourceTree = "<group>"; };
@@ -101,8 +98,6 @@
 				D3533D5F1F00159B005AFFDB /* helpers.h */,
 				D3533D631F006F4B005AFFDB /* obj.c */,
 				D3533D641F006F4B005AFFDB /* obj.h */,
-				D3533D661F008619005AFFDB /* camera.c */,
-				D3533D671F008619005AFFDB /* camera.h */,
 				D327DF021F0289D00081F9A0 /* vector.c */,
 				D327DF031F0289D00081F9A0 /* vector.h */,
 				D3EA466F1F051C88007EAE1B /* game_obj.c */,
@@ -198,7 +193,6 @@
 				D3EA467E1F052F47007EAE1B /* linalgb.c in Sources */,
 				D3533D601F00159B005AFFDB /* helpers.c in Sources */,
 				D327DF041F0289D00081F9A0 /* vector.c in Sources */,
-				D3533D681F008619005AFFDB /* camera.c in Sources */,
 				D3EA467C1F052F47007EAE1B /* stb_image.c in Sources */,
 				D3EA46711F051C88007EAE1B /* game_obj.c in Sources */,
 				D3EA467D1F052F47007EAE1B /* glad.c in Sources */,
