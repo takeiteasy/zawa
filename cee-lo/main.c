@@ -30,12 +30,13 @@ static dJointGroupID contact_group;
 static dContact contact[MAX_CONTACTS];
 static vector_t dice;
 
-//#undef GLAD_DEBUG
+#undef GLAD_DEBUG
 
 #ifdef GLAD_DEBUG
 void pre_gl_call(const char *name, void *funcptr, int len_args, ...) {
   printf("Calling: %s (%d arguments)\n", name, len_args);
 }
+#endif
 
 char* glGetError_str(GLenum err) {
   switch (err) {
@@ -58,7 +59,6 @@ void post_gl_call(const char *name, void *funcptr, int len_args, ...) {
     abort();
   }
 }
-#endif
 
 void cleanup() {
   SDL_DestroyWindow(window);
@@ -81,7 +81,7 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
     for (int i = 0; i < numc; i++) {
       contact[i].surface.mode   = dContactBounce;
       contact[i].surface.mu     = dInfinity;
-      contact[i].surface.bounce = 0.2;
+      contact[i].surface.bounce = 0.3;
       
       dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
       dJointAttach (c, b1, b2);
@@ -129,8 +129,9 @@ int main(int argc, const char * argv[]) {
   
 #ifdef GLAD_DEBUG
   glad_set_pre_callback(pre_gl_call);
-  glad_set_post_callback(post_gl_call);
 #endif
+  
+  glad_set_post_callback(post_gl_call);
   
   printf("Vendor:   %s\n", glGetString(GL_VENDOR));
   printf("Renderer: %s\n", glGetString(GL_RENDERER));
@@ -173,33 +174,9 @@ int main(int argc, const char * argv[]) {
   cam.yaw   = -90.f;
   cam.pitch = -30.25f;
   
-  mat4 view = mat4_view_look_at(vec3_new(0.f, 2.f, 2.2f),
-                                vec3_new(0.f, .8f, 0.f),
-                                vec3_new(0.f, 1.f, 0.f));
-//  [0]	float	1
-//  [1]	float	-0.0000000220206591
-//  [2]	float	0.0000000377185643
-//  [3]	float	0
-//  [4]	float	0.0000000000205986339
-//  [5]	float	0.863835573
-//  [6]	float	0.503773928
-//  [7]	float	0
-//  [8]	float	-0.0000000436760708
-//  [9]	float	-0.503773928
-//  [10]	float	0.863835573
-//  [11]	float	0
-//  [12]	float	0.00109354139
-//  [13]	float	-0.862065434
-//  [14]	float	-2.94925117
-//  [15]	float	1
-//  
-//  [0]	float	-0.0000000377594489
-//  [1]	float	-0.503773987
-//  [2]	float	-0.863835513
-  
-#ifndef GLAD_DEBUG
-  camera_update(&cam);
-#endif
+//  mat4 view = mat4_view_look_at(vec3_new(0.f, 2.f, 2.2f),
+//                                vec3_new(0.f, .8f, 0.f),
+//                                vec3_new(0.f, 1.f, 0.f));
   
   light_t spotlight;
   spotlight.position = vec3_new(0.f, 7.f, 0.f);
@@ -222,10 +199,17 @@ int main(int argc, const char * argv[]) {
   GLuint dice_shader = load_shader_file(RES(default.vert.glsl),
                                         RES(dice.frag.glsl));
   
-  obj_t cube_obj, plane_obj, bowl_obj;
+  GLuint hand_shader = load_shader_file(RES(default.vert.glsl),
+                                        RES(hand.frag.glsl));
+  
+  int hand_tex_w, hand_tex_h;
+  GLuint hand_tex = load_texture(RES(hand.png), &hand_tex_w, &hand_tex_h);
+  
+  obj_t cube_obj, plane_obj, bowl_obj, hand_obj;
   load_obj(&cube_obj,  RES(dice.obj));
   load_obj(&plane_obj, RES(plane.obj));
   load_obj(&bowl_obj,  RES(bowl.obj));
+  load_obj(&hand_obj,  RES(hand.obj));
   
   vector_init(&dice);
   
@@ -268,6 +252,10 @@ int main(int argc, const char * argv[]) {
 //  dGeomSetBody(bowl.geom, bowl.body);
 //  update_game_obj(&bowl, 0);
   
+  mat4 hand_world = mat4_mul_mat4(mat4_mul_mat4(mat4_id(),
+                                                mat4_scale(vec3_new(.05f, .05f, .05f))),
+                                  mat4_translation(vec3_new(0.f, 35.f, 25.f)));
+  
   Uint32 old_time, current_time = SDL_GetTicks();
   float delta;
   SDL_bool running = SDL_TRUE, running_physics;
@@ -284,9 +272,9 @@ int main(int argc, const char * argv[]) {
           running = SDL_FALSE;
           break;
         case SDL_MOUSEMOTION:
-#ifdef GLAD_DEBUG
-          camera_look(&cam, e.motion.xrel, -e.motion.yrel);
-#endif
+          hand_world = mat4_mul_mat4(hand_world, mat4_translation(vec3_new(e.motion.xrel, -e.motion.yrel, 0)));
+          hand_world.yw = clamp(hand_world.yw, 1.f, 2.1f);
+          hand_world.xw = clamp(hand_world.xw, -.75f, .5f);
           break;
         case SDL_KEYUP:
           if (e.key.keysym.sym == SDLK_z) {
@@ -295,7 +283,7 @@ int main(int argc, const char * argv[]) {
             dMass mass;
             dMassSetBox(&mass, 1, 1, 1, 1);
             dBodySetMass(tmp->body, &mass);
-            dBodySetPosition(tmp->body, cam.pos.x, cam.pos.y, cam.pos.z);
+            dBodySetPosition(tmp->body, hand_world.xw, hand_world.yw, hand_world.zw);
             
             dMatrix3 R;
             vec3 rand_euler = vec3_new(rand_angle, rand_angle, rand_angle);
@@ -340,10 +328,8 @@ int main(int argc, const char * argv[]) {
     if (keys[SDL_GetScancodeFromKey(SDLK_SPACE)])
       running_physics = SDL_FALSE;
 
-#ifdef GLAD_DEBUG
     camera_move(&cam, keys);
     camera_update(&cam);
-#endif
     
     if (running_physics) {
       dSpaceCollide(space, 0, collide);
@@ -359,14 +345,14 @@ int main(int argc, const char * argv[]) {
     glUniform3f(viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
     
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view.m[0]);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
     
     draw_game_obj(&bowl, bowl_shader);
     
     glUseProgram(dice_shader);
     
     glUniformMatrix4fv(dice_proj_loc,  1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(dice_view_loc,  1, GL_FALSE, &view.m[0]);
+    glUniformMatrix4fv(dice_view_loc,  1, GL_FALSE, &cam.view.m[0]);
     
     add_light(&spotlight, dice_shader);
     glUniform3f(dice_viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
@@ -381,7 +367,7 @@ int main(int argc, const char * argv[]) {
     glUseProgram(plane_shader);
     
     glUniformMatrix4fv(plane_proj_loc,  1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(plane_view_loc,  1, GL_FALSE, &view.m[0]);
+    glUniformMatrix4fv(plane_view_loc,  1, GL_FALSE, &cam.view.m[0]);
     glUniformMatrix4fv(plane_model_loc, 1, GL_FALSE, &plane.world.m[0]);
     
     add_light(&spotlight, plane_shader);
@@ -389,6 +375,18 @@ int main(int argc, const char * argv[]) {
     glUniform3f(plane_color_loc, plane_color.x, plane_color.y, plane_color.z);
     
     draw_obj(&plane_obj);
+    
+    glUseProgram(hand_shader);
+    
+    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "projection"),  1, GL_FALSE, &p.m[0]);
+    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "view"),  1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "model"), 1, GL_FALSE, &hand_world.m[0]);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, hand_tex);
+    glUniform1d(glGetUniformLocation(hand_shader, "hand_tex"), 0);
+    
+    draw_obj(&hand_obj);
     
     glUseProgram(0);
     
