@@ -17,7 +17,7 @@
 #include "game_obj.h"
 #include "Icosphere_obj.h"
 
-#define RES(X) "/Users/rusty/git/cee-lo/res/" #X
+#define RES(X) "/Users/rusty/git/chinchirorin/res/" #X
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
 
@@ -89,6 +89,12 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   }
 }
 
+void remove_die(void* o) {
+  game_obj_t* die = (game_obj_t*)o;
+  dBodyDestroy(die->body);
+  dGeomDestroy(die->geom);
+}
+
 int main(int argc, const char * argv[]) {
   srand((unsigned int)time(NULL));
   
@@ -141,6 +147,19 @@ int main(int argc, const char * argv[]) {
   SDL_ShowCursor(SDL_DISABLE);
   SDL_SetRelativeMouseMode(SDL_TRUE);
   
+  dInitODE();
+  world = dWorldCreate();
+  space = dHashSpaceCreate(0);
+  dWorldSetGravity(world, 0.0, -9.81, 0.0);
+  dWorldSetLinearDamping(world, 0.0001);
+  dWorldSetAngularDamping(world, 0.005);
+  dWorldSetMaxAngularSpeed(world, 200);
+  dWorldSetContactMaxCorrectingVel(world, 0.2);
+  dWorldSetContactSurfaceLayer(world, 0.001);
+  dWorldSetCFM(world, 1E-13);
+  dWorldSetERP(world, 0.5);
+  contact_group = dJointGroupCreate(0);
+  
   atexit(cleanup);
   
   mat4 p = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
@@ -153,6 +172,31 @@ int main(int argc, const char * argv[]) {
   cam.world = vec3_new(0.f, 1.f, 0.f);
   cam.yaw   = -90.f;
   cam.pitch = -30.25f;
+  
+  mat4 view = mat4_view_look_at(vec3_new(0.f, 2.f, 2.2f),
+                                vec3_new(0.f, .8f, 0.f),
+                                vec3_new(0.f, 1.f, 0.f));
+//  [0]	float	1
+//  [1]	float	-0.0000000220206591
+//  [2]	float	0.0000000377185643
+//  [3]	float	0
+//  [4]	float	0.0000000000205986339
+//  [5]	float	0.863835573
+//  [6]	float	0.503773928
+//  [7]	float	0
+//  [8]	float	-0.0000000436760708
+//  [9]	float	-0.503773928
+//  [10]	float	0.863835573
+//  [11]	float	0
+//  [12]	float	0.00109354139
+//  [13]	float	-0.862065434
+//  [14]	float	-2.94925117
+//  [15]	float	1
+//  
+//  [0]	float	-0.0000000377594489
+//  [1]	float	-0.503773987
+//  [2]	float	-0.863835513
+  
 #ifndef GLAD_DEBUG
   camera_update(&cam);
 #endif
@@ -169,8 +213,8 @@ int main(int argc, const char * argv[]) {
   spotlight.linear = .09f;
   spotlight.quadratic = .032f;
   
-  GLuint shader = load_shader_file(RES(default.vert.glsl),
-                                   RES(default.frag.glsl));
+  GLuint bowl_shader = load_shader_file(RES(default.vert.glsl),
+                                        RES(bowl.frag.glsl));
   
   GLuint plane_shader = load_shader_file(RES(default.vert.glsl),
                                         RES(plane.frag.glsl));
@@ -185,31 +229,22 @@ int main(int argc, const char * argv[]) {
   
   vector_init(&dice);
   
-  GLuint projection_loc    = glGetUniformLocation(shader, "projection");
-  GLuint view_loc          = glGetUniformLocation(shader, "view");
-  GLuint viewPos_loc       = glGetUniformLocation(shader, "viewPos");
+  GLuint projection_loc    = glGetUniformLocation(bowl_shader, "projection");
+  GLuint view_loc          = glGetUniformLocation(bowl_shader, "view");
+  GLuint viewPos_loc       = glGetUniformLocation(bowl_shader, "viewPos");
   
   GLuint plane_proj_loc    = glGetUniformLocation(plane_shader, "projection");
   GLuint plane_view_loc    = glGetUniformLocation(plane_shader, "view");
   GLuint plane_model_loc   = glGetUniformLocation(plane_shader, "model");
   GLuint plane_viewPos_loc = glGetUniformLocation(plane_shader, "viewPos");
+  GLuint plane_color_loc   = glGetUniformLocation(plane_shader, "plane_color");
+  vec3 plane_color = vec3_new(0.f, 0.f, 0.f);
   
-  GLuint dice_proj_loc    = glGetUniformLocation(dice_shader, "projection");
-  GLuint dice_view_loc    = glGetUniformLocation(dice_shader, "view");
-  GLuint dice_viewPos_loc = glGetUniformLocation(dice_shader, "viewPos");
-  
-  dInitODE();
-  world = dWorldCreate();
-  space = dHashSpaceCreate(0);
-  dWorldSetGravity(world, 0.0, -9.81, 0.0);
-  dWorldSetLinearDamping(world, 0.0001);
-  dWorldSetAngularDamping(world, 0.005);
-  dWorldSetMaxAngularSpeed(world, 200);
-  dWorldSetContactMaxCorrectingVel(world, 0.2);
-  dWorldSetContactSurfaceLayer(world, 0.001);
-  dWorldSetCFM(world, 1E-13);
-  dWorldSetERP(world, 0.5);
-  contact_group = dJointGroupCreate(0);
+  GLuint dice_proj_loc     = glGetUniformLocation(dice_shader, "projection");
+  GLuint dice_view_loc     = glGetUniformLocation(dice_shader, "view");
+  GLuint dice_viewPos_loc  = glGetUniformLocation(dice_shader, "viewPos");
+  GLuint dice_color_loc    = glGetUniformLocation(dice_shader, "die_color");
+  vec3 die_color = vec3_new(.2f, .2f, .2f);
   
   game_obj_t plane;
   plane.geom = dCreatePlane(space, 0, 1, 0, 0);
@@ -218,8 +253,6 @@ int main(int argc, const char * argv[]) {
   
   game_obj_t bowl;
   bowl.model = &bowl_obj;
-  int bowl_tex_w, bowl_tex_h;
-  bowl.mat.texture = load_texture(RES(terracotta.png), &bowl_tex_w, &bowl_tex_h);
   bowl.mat.shininess = 1.f;
   bowl.mat.specular = vec3_new(.25f, .25f, .25f);
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
@@ -284,8 +317,13 @@ int main(int argc, const char * argv[]) {
             tmp->mat.specular = vec3_new(.5f, .5f, .5f);
             
             vector_push(&dice, (void*)tmp);
-          } else if (e.key.keysym.sym == SDLK_c)
-            vector_clear_free(&dice);
+          }
+          else if (e.key.keysym.sym == SDLK_c)
+            vector_clear_free_with(&dice, remove_die);
+          else if (e.key.keysym.sym == SDLK_x) {
+            plane_color = vec3_new(frand_01, frand_01, frand_01);
+            die_color = vec3_new(frand_01, frand_01, frand_01);
+          }
           break;
       }
     }
@@ -315,23 +353,24 @@ int main(int argc, const char * argv[]) {
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    glUseProgram(shader);
+    glUseProgram(bowl_shader);
     
-    add_light(&spotlight, shader);
+    add_light(&spotlight, bowl_shader);
     glUniform3f(viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
     
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view.m[0]);
     
-    draw_game_obj(&bowl, shader);
+    draw_game_obj(&bowl, bowl_shader);
     
     glUseProgram(dice_shader);
     
     glUniformMatrix4fv(dice_proj_loc,  1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(dice_view_loc,  1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(dice_view_loc,  1, GL_FALSE, &view.m[0]);
     
     add_light(&spotlight, dice_shader);
     glUniform3f(dice_viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
+    glUniform3f(dice_color_loc, die_color.x, die_color.y, die_color.z);
     
     for (int i = 0; i < dice.length; ++i) {
       game_obj_t* tmp = (game_obj_t*)vector_get(&dice, i);
@@ -342,11 +381,12 @@ int main(int argc, const char * argv[]) {
     glUseProgram(plane_shader);
     
     glUniformMatrix4fv(plane_proj_loc,  1, GL_FALSE, &p.m[0]);
-    glUniformMatrix4fv(plane_view_loc,  1, GL_FALSE, &cam.view.m[0]);
+    glUniformMatrix4fv(plane_view_loc,  1, GL_FALSE, &view.m[0]);
     glUniformMatrix4fv(plane_model_loc, 1, GL_FALSE, &plane.world.m[0]);
     
     add_light(&spotlight, plane_shader);
     glUniform3f(plane_viewPos_loc, cam.pos.x, cam.pos.y, cam.pos.z);
+    glUniform3f(plane_color_loc, plane_color.x, plane_color.y, plane_color.z);
     
     draw_obj(&plane_obj);
     
@@ -361,7 +401,7 @@ int main(int argc, const char * argv[]) {
   free_game_obj(&plane);
   dGeomTriMeshDataDestroy(bowl_tri);
   free_game_obj(&bowl);
-  glDeleteProgram(shader);
+  glDeleteProgram(bowl_shader);
   glDeleteProgram(plane_shader);
   glDeleteProgram(dice_shader);
   

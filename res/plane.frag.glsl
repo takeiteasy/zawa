@@ -23,6 +23,7 @@ in vec2 TexCoords;
 
 uniform vec3 viewPos;
 uniform Light light;
+uniform vec3 plane_color;
 
 #define PI 3.14159265358979323846
 
@@ -50,7 +51,7 @@ float box(vec2 _st, vec2 _size, float _smoothEdges){
 void main() {
   vec3 tex = vec3(box(rotate2D(tile(TexCoords.st + fract(gl_FragCoord.xy * vec2(512.f)), 24.), PI * 0.25), vec2(0.7), 0.01));
   if (tex.x != 1 && tex.y != 1 && tex.z != 1)
-    tex = vec3(.2f, .2f, .2f);
+    tex = plane_color;
   
   vec3 lightDir = normalize(light.position - FragPos);
   float theta = dot(lightDir, normalize(-light.direction));
