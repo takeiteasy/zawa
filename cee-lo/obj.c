@@ -82,7 +82,7 @@ void load_obj(obj_t* o, const char* p) {
   int* vt_indices = (int*)malloc(num_f * 3 * sizeof(int));
   
   int3 verts_tmp, norms_tmp, uvs_tmp;
-  int v_index = 0,
+  int v_index  = 0,
       vt_index = 0,
       vn_index = 0,
       f_index  = 0;

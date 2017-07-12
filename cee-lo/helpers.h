@@ -22,6 +22,8 @@
 #define frand_range(min, max) ((max - min) * ((((float)rand()) / (float) RAND_MAX)) + min)
 #define rand_01 (rand_range(0, 1))
 #define frand_01 (rand_range(0, 100) / 100.f)
+#define rand_angle (frand_range(-6.28319f, 6.28319f))
+#define force_range (frand_range(5.5f, 6.5f))
 
 #define DEG2RAD(X) (X * .01745329251994329576f)
 

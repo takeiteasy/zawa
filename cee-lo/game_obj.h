@@ -16,9 +16,6 @@
 #include "helpers.h"
 #include "obj.h"
 
-#define rand_angle (frand_range(-6.28319f, 6.28319f))
-#define force_range (frand_range(5.5f, 6.5f))
-
 typedef struct {
   GLuint texture;
   vec3 specular;

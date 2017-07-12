@@ -16,9 +16,9 @@
 #include "game_obj.h"
 #include "Icosphere_obj.h"
 
-#define RES(X) "/Users/rusty/git/chinchirorin/res/" #X
+#define RES(X) "/Users/marisa/Documents/git/chinchirorin/res/" #X
 
-static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
+static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480, FBO_SIZE = 1024;
 
 static SDL_Window* window;
 static SDL_GLContext context;
@@ -236,10 +236,29 @@ int main(int argc, const char * argv[]) {
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);
   dGeomSetPosition(bowl.geom, 0.f, 0.85f, 0.f);
   bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
+  bowl.body = NULL;
   
   mat4 hand_world = mat4_mul_mat4(mat4_mul_mat4(mat4_id(),
                                                 mat4_scale(vec3_new(.05f, .05f, .05f))),
                                   mat4_translation(vec3_new(0.f, 35.f, 25.f)));
+  
+  unsigned int depthMapFBO;
+  glGenFramebuffers(1, &depthMapFBO);
+  
+  unsigned int depthMap;
+  glGenTextures(1, &depthMap);
+  glBindTexture(GL_TEXTURE_2D, depthMap);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, FBO_SIZE, FBO_SIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
   Uint32 old_time, current_time = SDL_GetTicks();
   float delta;
