@@ -12,7 +12,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "vector.h"
 #include "game_obj.h"
 #include "Icosphere_obj.h"
 
@@ -27,7 +26,8 @@ static dSpaceID space;
 static dJointGroupID contact_group;
 #define MAX_CONTACTS 8
 static dContact contact[MAX_CONTACTS];
-static vector_t dice;
+#define MAX_DICE 3
+static game_obj_t* dice[MAX_DICE];
 
 #undef GLAD_DEBUG
 
@@ -86,12 +86,6 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
       dJointAttach (c, b1, b2);
     }
   }
-}
-
-void remove_die(void* o) {
-  game_obj_t* die = (game_obj_t*)o;
-  dBodyDestroy(die->body);
-  dGeomDestroy(die->geom);
 }
 
 int main(int argc, const char * argv[]) {
@@ -203,8 +197,6 @@ int main(int argc, const char * argv[]) {
   load_obj(&bowl_obj,  RES(bowl.obj));
   load_obj(&hand_obj,  RES(hand.obj));
   
-  vector_init(&dice);
-  
   GLuint projection_loc    = glGetUniformLocation(bowl_shader, "projection");
   GLuint view_loc          = glGetUniformLocation(bowl_shader, "view");
   GLuint viewPos_loc       = glGetUniformLocation(bowl_shader, "viewPos");
@@ -260,6 +252,7 @@ int main(int argc, const char * argv[]) {
   glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
+  int num_dice = 0;
   Uint32 old_time, current_time = SDL_GetTicks();
   float delta;
   
@@ -282,6 +275,10 @@ int main(int argc, const char * argv[]) {
           break;
         case SDL_KEYUP:
           if (e.key.keysym.sym == SDLK_SPACE) {
+            printf("%d\n", num_dice);
+            if (num_dice >= MAX_DICE)
+              break;
+            
             game_obj_t* tmp = (game_obj_t*)malloc(sizeof(game_obj_t));
             tmp->body = dBodyCreate(world);
             dMass mass;
@@ -308,10 +305,20 @@ int main(int argc, const char * argv[]) {
             tmp->mat.shininess = 32.f;
             tmp->mat.specular = vec3_new(.5f, .5f, .5f);
             
-            vector_push(&dice, (void*)tmp);
+            dice[num_dice] = tmp;
+            num_dice = min(++num_dice, MAX_DICE);
           }
-          else if (e.key.keysym.sym == SDLK_ESCAPE)
-            vector_clear_free_with(&dice, remove_die);
+          else if (e.key.keysym.sym == SDLK_ESCAPE) {
+            num_dice = 0;
+            for (int i = 0; i < MAX_DICE; ++i) {
+              if (dice[i]) {
+                dBodyDestroy(dice[i]->body);
+                dGeomDestroy(dice[i]->geom);
+                free(dice[i]);
+                dice[i] = NULL;
+              }
+            }
+          }
           else if (e.key.keysym.sym == SDLK_c) {
             plane_color = vec3_new(frand_01, frand_01, frand_01);
             die_color = vec3_new(1.f - plane_color.x, 1.f - plane_color.y, 1.f - plane_color.z);
@@ -345,10 +352,11 @@ int main(int argc, const char * argv[]) {
     glUniform3f(dice_viewPos_loc, view_pos.x, view_pos.y, view_pos.z);
     glUniform3f(dice_color_loc, die_color.x, die_color.y, die_color.z);
     
-    for (int i = 0; i < dice.length; ++i) {
-      game_obj_t* tmp = (game_obj_t*)vector_get(&dice, i);
-      update_game_obj(tmp, 1);
-      draw_game_obj(tmp, dice_shader);
+    for (int i = 0; i < MAX_DICE; ++i) {
+      if (dice[i]) {
+        update_game_obj(dice[i], 1);
+        draw_game_obj(dice[i], dice_shader);
+      }
     }
     
     glUseProgram(plane_shader);
@@ -380,9 +388,9 @@ int main(int argc, const char * argv[]) {
     SDL_GL_SwapWindow(window);
   }
   
-  for (int i = 0; i < dice.length; ++i)
-    free_game_obj((game_obj_t*)vector_get(&dice, i));
-  vector_free_all(&dice);
+  for (int i = 0; i < MAX_DICE; ++i)
+    if (dice[i])
+      free_game_obj(dice[i]);
   free_game_obj(&plane);
   dGeomTriMeshDataDestroy(bowl_tri);
   free_game_obj(&bowl);
