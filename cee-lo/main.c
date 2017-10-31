@@ -15,7 +15,7 @@
 #include "game_obj.h"
 #include "Icosphere_obj.h"
 
-#define RES(X) "/Users/marisa/Documents/git/chinchirorin/res/" #X
+#define RES(X) "/Users/roryb/Dropbox/git/chinchirorin/res/" #X
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480, FBO_SIZE = 1024;
 
@@ -26,8 +26,10 @@ static dSpaceID space;
 static dJointGroupID contact_group;
 #define MAX_CONTACTS 8
 static dContact contact[MAX_CONTACTS];
-#define MAX_DICE 3
+#define MAX_DICE 1
 static game_obj_t* dice[MAX_DICE];
+static float dice_val[MAX_DICE];
+static int num_dice = 0;
 
 #undef GLAD_DEBUG
 
@@ -59,15 +61,6 @@ void post_gl_call(const char *name, void *funcptr, int len_args, ...) {
   }
 }
 
-void cleanup() {
-  SDL_DestroyWindow(window);
-  SDL_GL_DeleteContext(context);
-  dWorldDestroy(world);
-  dSpaceDestroy(space);
-  dJointGroupDestroy(contact_group);
-  printf("Goodbye!\n");
-}
-
 void collide(void* data, dGeomID o1, dGeomID o2) {
   dBodyID b1 = dGeomGetBody(o1),
           b2 = dGeomGetBody(o2);
@@ -75,16 +68,27 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
   if (b1 && b2 && dAreConnectedExcluding(b1, b2, dJointTypeContact))
     return;
   
-  int numc = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
-  if (numc) {
-    for (int i = 0; i < numc; i++) {
-      contact[i].surface.mode   = dContactBounce;
-      contact[i].surface.mu     = dInfinity;
-      contact[i].surface.bounce = 0.3;
-      
-      dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
-      dJointAttach (c, b1, b2);
+  for (int i = 0; i < dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact)); i++) {
+    contact[i].surface.mode = dContactBounce | dContactSoftCFM;
+    contact[i].surface.mu = dInfinity;
+    contact[i].surface.mu2 = 0;
+    contact[i].surface.bounce = 0.3;
+    
+    dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
+    dJointAttach(c, b1, b2);
+  }
+}
+
+void clear_dice() {
+  num_dice = 0;
+  for (int i = 0; i < MAX_DICE; ++i) {
+    if (dice[i]) {
+      dBodyDestroy(dice[i]->body);
+      dGeomDestroy(dice[i]->geom);
+      free(dice[i]);
+      dice[i] = NULL;
     }
+    dice_val[i] = 0.f;
   }
 }
 
@@ -126,10 +130,10 @@ int main(int argc, const char * argv[]) {
   
   glad_set_post_callback(post_gl_call);
   
-  printf("Vendor:   %s\n", glGetString(GL_VENDOR));
-  printf("Renderer: %s\n", glGetString(GL_RENDERER));
-  printf("Version:  %s\n", glGetString(GL_VERSION));
-  printf("GLSL:     %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+  printf("Vendor:   %s\n",   glGetString(GL_VENDOR));
+  printf("Renderer: %s\n",   glGetString(GL_RENDERER));
+  printf("Version:  %s\n",   glGetString(GL_VERSION));
+  printf("GLSL:     %s\n\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
   
 //  glClearColor(220.0f/255.0f, 220.0f/255.0f, 220.0f/255.0f, 1.0f);
   glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -154,8 +158,6 @@ int main(int argc, const char * argv[]) {
   dWorldSetERP(world, 0.5);
   contact_group = dJointGroupCreate(0);
   
-  atexit(cleanup);
-  
   mat4 proj = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
   
   vec3 view_pos = vec3_new(0.f, 2.f, 2.2f);
@@ -176,17 +178,10 @@ int main(int argc, const char * argv[]) {
   spotlight.linear = .09f;
   spotlight.quadratic = .032f;
   
-  GLuint bowl_shader = load_shader_file(RES(default.vert.glsl),
-                                        RES(bowl.frag.glsl));
-  
-  GLuint plane_shader = load_shader_file(RES(default.vert.glsl),
-                                        RES(plane.frag.glsl));
-  
-  GLuint dice_shader = load_shader_file(RES(default.vert.glsl),
-                                        RES(dice.frag.glsl));
-  
-  GLuint hand_shader = load_shader_file(RES(default.vert.glsl),
-                                        RES(hand.frag.glsl));
+  GLuint bowl_shader  = load_shader_file(RES(default.vert.glsl), RES(bowl.frag.glsl));
+  GLuint plane_shader = load_shader_file(RES(default.vert.glsl), RES(plane.frag.glsl));
+  GLuint dice_shader  = load_shader_file(RES(default.vert.glsl), RES(dice.frag.glsl));
+  GLuint hand_shader  = load_shader_file(RES(default.vert.glsl), RES(hand.frag.glsl));
   
   int hand_tex_w, hand_tex_h;
   GLuint hand_tex = load_texture(RES(hand.png), &hand_tex_w, &hand_tex_h);
@@ -221,7 +216,7 @@ int main(int argc, const char * argv[]) {
   
   game_obj_t bowl;
   bowl.model = &bowl_obj;
-  bowl.mat.shininess = 1.f;
+  bowl.mat.shininess = 10.f;
   bowl.mat.specular = vec3_new(.25f, .25f, .25f);
   dTriMeshDataID bowl_tri = dGeomTriMeshDataCreate();
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
@@ -252,7 +247,17 @@ int main(int argc, const char * argv[]) {
   glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-  int num_dice = 0;
+  FILE* tmp_stream = NULL;
+  long close_time = 0;
+  char tmp_buff[256];
+#define TEST_RENAME(X) \
+  if (!tmp_stream && num_dice > 0) { \
+    close_time = time(NULL) + 2; \
+    bzero(tmp_buff, sizeof(tmp_buff)); \
+    sprintf(tmp_buff, "/Users/roryb/Dropbox/git/chinchirorin/test/%d_%ld.txt", X, close_time); \
+    tmp_stream = fopen(tmp_buff, "w"); \
+  }
+
   Uint32 old_time, current_time = SDL_GetTicks();
   float delta;
   
@@ -275,7 +280,6 @@ int main(int argc, const char * argv[]) {
           break;
         case SDL_KEYUP:
           if (e.key.keysym.sym == SDLK_SPACE) {
-            printf("%d\n", num_dice);
             if (num_dice >= MAX_DICE)
               break;
             
@@ -308,28 +312,57 @@ int main(int argc, const char * argv[]) {
             dice[num_dice] = tmp;
             num_dice = min(++num_dice, MAX_DICE);
           }
-          else if (e.key.keysym.sym == SDLK_ESCAPE) {
-            num_dice = 0;
-            for (int i = 0; i < MAX_DICE; ++i) {
-              if (dice[i]) {
-                dBodyDestroy(dice[i]->body);
-                dGeomDestroy(dice[i]->geom);
-                free(dice[i]);
-                dice[i] = NULL;
-              }
-            }
-          }
+          else if (e.key.keysym.sym == SDLK_ESCAPE)
+            clear_dice();
           else if (e.key.keysym.sym == SDLK_c) {
             plane_color = vec3_new(frand_01, frand_01, frand_01);
             die_color = vec3_new(1.f - plane_color.x, 1.f - plane_color.y, 1.f - plane_color.z);
           }
+          else if (e.key.keysym.sym == SDLK_v) {
+            plane_color = vec3_new(0.f, 0.f, 0.f);
+            die_color   = vec3_new(.2f, .2f, .2f);
+          }
+          else if (e.key.keysym.sym == SDLK_1) { TEST_RENAME(1); }
+          else if (e.key.keysym.sym == SDLK_2) { TEST_RENAME(2); }
+          else if (e.key.keysym.sym == SDLK_3) { TEST_RENAME(3); }
+          else if (e.key.keysym.sym == SDLK_4) { TEST_RENAME(4); }
+          else if (e.key.keysym.sym == SDLK_5) { TEST_RENAME(5); }
+          else if (e.key.keysym.sym == SDLK_6) { TEST_RENAME(6); }
           break;
       }
     }
     
     dSpaceCollide(space, 0, collide);
     dWorldQuickStep(world, 1.f / 60.f);
-    dJointGroupEmpty (contact_group);
+    dJointGroupEmpty(contact_group);
+    
+    for (int i = 0; i < num_dice; ++i) {
+      if (dice[i] && !dice_val[i]) {
+        if (tmp_stream) {
+          const dReal* a = dBodyGetQuaternion(dice[i]->body);
+          const dReal* b = dBodyGetRotation(dice[i]->body);
+        
+          fprintf(tmp_stream, "Q: %f %f %f %f  %f %f %f %f  %f %f %f %f\nR: %f %f %f %f  %f %f %f %f  %f %f %f %f\n",
+                  a[0], a[1], a[2],  a[3],
+                  a[4], a[5], a[6],  a[7],
+                  a[8], a[9], a[10], a[11],
+                  b[0], b[1], b[2],  b[3],
+                  b[4], b[5], b[6],  b[7],
+                  b[8], b[9], b[10], b[11]);
+          
+          if (time(NULL) > close_time) {
+            fclose(tmp_stream);
+            tmp_stream = NULL;
+            clear_dice();
+            
+            SDL_Event tmp_event;
+            tmp_event.type = SDL_KEYUP;
+            tmp_event.key.keysym.sym = SDLK_SPACE;
+            SDL_PushEvent(&tmp_event);
+          }
+        }
+      }
+    }
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
@@ -353,7 +386,7 @@ int main(int argc, const char * argv[]) {
     glUniform3f(dice_color_loc, die_color.x, die_color.y, die_color.z);
     
     for (int i = 0; i < MAX_DICE; ++i) {
-      if (dice[i]) {
+      if (dice[i] && !dice_val[i]) {
         update_game_obj(dice[i], 1);
         draw_game_obj(dice[i], dice_shader);
       }
@@ -397,6 +430,13 @@ int main(int argc, const char * argv[]) {
   glDeleteProgram(bowl_shader);
   glDeleteProgram(plane_shader);
   glDeleteProgram(dice_shader);
+  
+  SDL_DestroyWindow(window);
+  SDL_GL_DeleteContext(context);
+  dWorldDestroy(world);
+  dSpaceDestroy(space);
+  dJointGroupDestroy(contact_group);
+  printf("Goodbye!\n");
   
   return 0;
 }

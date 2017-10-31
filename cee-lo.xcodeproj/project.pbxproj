@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6D3379721F1680C6002EA298 /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D3379711F1680C6002EA298 /* libSDL2-2.0.0.dylib */; };
-		6D823E001F16849700F85818 /* libode.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D823DFF1F16849700F85818 /* libode.6.dylib */; };
+		886467F11FA0F4710006EBDD /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 886467F01FA0F4710006EBDD /* libSDL2-2.0.0.dylib */; };
+		886467F61FA0F5EA0006EBDD /* libode.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 886467F51FA0F5EA0006EBDD /* libode.6.dylib */; };
 		D3533D4A1F000A01005AFFDB /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D491F000A01005AFFDB /* main.c */; };
 		D3533D521F000A09005AFFDB /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D511F000A09005AFFDB /* OpenGL.framework */; };
 		D3533D601F00159B005AFFDB /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* helpers.c */; };
@@ -32,8 +32,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		6D3379711F1680C6002EA298 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../../../../../usr/local/Cellar/sdl2/2.0.5/lib/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
-		6D823DFF1F16849700F85818 /* libode.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libode.6.dylib; path = ../../../../../usr/local/Cellar/ode/0.14_1/lib/libode.6.dylib; sourceTree = "<group>"; };
+		886467F01FA0F4710006EBDD /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../../../../../usr/local/Cellar/sdl2/2.0.6/lib/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
+		886467F51FA0F5EA0006EBDD /* libode.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libode.6.dylib; path = ../../../../../usr/local/Cellar/ode/0.15.2/lib/libode.6.dylib; sourceTree = "<group>"; };
 		D3533D461F000A01005AFFDB /* cee-lo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "cee-lo"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3533D491F000A01005AFFDB /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		D3533D511F000A09005AFFDB /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -59,8 +59,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6D823E001F16849700F85818 /* libode.6.dylib in Frameworks */,
-				6D3379721F1680C6002EA298 /* libSDL2-2.0.0.dylib in Frameworks */,
+				886467F61FA0F5EA0006EBDD /* libode.6.dylib in Frameworks */,
+				886467F11FA0F4710006EBDD /* libSDL2-2.0.0.dylib in Frameworks */,
 				D3533D521F000A09005AFFDB /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -105,8 +105,8 @@
 		D3533D501F000A09005AFFDB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				6D823DFF1F16849700F85818 /* libode.6.dylib */,
-				6D3379711F1680C6002EA298 /* libSDL2-2.0.0.dylib */,
+				886467F51FA0F5EA0006EBDD /* libode.6.dylib */,
+				886467F01FA0F4710006EBDD /* libSDL2-2.0.0.dylib */,
 				D3533D511F000A09005AFFDB /* OpenGL.framework */,
 			);
 			name = Frameworks;
@@ -307,6 +307,8 @@
 					"$(inherited)",
 					/usr/local/Cellar/sdl2/2.0.5/lib,
 					/usr/local/Cellar/ode/0.14_1/lib,
+					/usr/local/Cellar/sdl2/2.0.6/lib,
+					/usr/local/Cellar/ode/0.15.2/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -320,6 +322,8 @@
 					"$(inherited)",
 					/usr/local/Cellar/sdl2/2.0.5/lib,
 					/usr/local/Cellar/ode/0.14_1/lib,
+					/usr/local/Cellar/sdl2/2.0.6/lib,
+					/usr/local/Cellar/ode/0.15.2/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

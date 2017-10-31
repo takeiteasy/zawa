@@ -56,7 +56,7 @@ void main() {
     float distance    = length(light.position - FragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     
-    diffuse   *= attenuation;
+    diffuse  *= attenuation;
     specular *= attenuation;
     
     vec3 result = ambient + diffuse + specular;
