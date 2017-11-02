@@ -26,7 +26,7 @@ static dSpaceID space;
 static dJointGroupID contact_group;
 #define MAX_CONTACTS 8
 static dContact contact[MAX_CONTACTS];
-#define MAX_DICE 1
+#define MAX_DICE 3
 static game_obj_t* dice[MAX_DICE];
 static float dice_val[MAX_DICE];
 static int num_dice = 0;
@@ -246,17 +246,6 @@ int main(int argc, const char * argv[]) {
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  
-  FILE* tmp_stream = NULL;
-  long close_time = 0;
-  char tmp_buff[256];
-#define TEST_RENAME(X) \
-  if (!tmp_stream && num_dice > 0) { \
-    close_time = time(NULL) + 2; \
-    bzero(tmp_buff, sizeof(tmp_buff)); \
-    sprintf(tmp_buff, "/Users/roryb/Dropbox/git/chinchirorin/test/%d_%ld.txt", X, close_time); \
-    tmp_stream = fopen(tmp_buff, "w"); \
-  }
 
   Uint32 old_time, current_time = SDL_GetTicks();
   float delta;
@@ -294,7 +283,7 @@ int main(int argc, const char * argv[]) {
             vec3 rand_euler = vec3_new(rand_angle, rand_angle, rand_angle);
             dRFromEulerAngles(R, rand_euler.x, rand_euler.y, rand_euler.z);
             dBodySetRotation(tmp->body, R);
-            
+
             vec3 vel = vec3_new(force_range, force_range, force_range);
             vec3 force = vec3_mul_vec3(vec3_normalize(fire_forward), vel);
             dBodySetLinearVel(tmp->body, force.x, force.y, force.z);
@@ -322,12 +311,6 @@ int main(int argc, const char * argv[]) {
             plane_color = vec3_new(0.f, 0.f, 0.f);
             die_color   = vec3_new(.2f, .2f, .2f);
           }
-          else if (e.key.keysym.sym == SDLK_1) { TEST_RENAME(1); }
-          else if (e.key.keysym.sym == SDLK_2) { TEST_RENAME(2); }
-          else if (e.key.keysym.sym == SDLK_3) { TEST_RENAME(3); }
-          else if (e.key.keysym.sym == SDLK_4) { TEST_RENAME(4); }
-          else if (e.key.keysym.sym == SDLK_5) { TEST_RENAME(5); }
-          else if (e.key.keysym.sym == SDLK_6) { TEST_RENAME(6); }
           break;
       }
     }
@@ -336,33 +319,10 @@ int main(int argc, const char * argv[]) {
     dWorldQuickStep(world, 1.f / 60.f);
     dJointGroupEmpty(contact_group);
     
-    for (int i = 0; i < num_dice; ++i) {
-      if (dice[i] && !dice_val[i]) {
-        if (tmp_stream) {
-          const dReal* a = dBodyGetQuaternion(dice[i]->body);
-          const dReal* b = dBodyGetRotation(dice[i]->body);
-        
-          fprintf(tmp_stream, "Q: %f %f %f %f  %f %f %f %f  %f %f %f %f\nR: %f %f %f %f  %f %f %f %f  %f %f %f %f\n",
-                  a[0], a[1], a[2],  a[3],
-                  a[4], a[5], a[6],  a[7],
-                  a[8], a[9], a[10], a[11],
-                  b[0], b[1], b[2],  b[3],
-                  b[4], b[5], b[6],  b[7],
-                  b[8], b[9], b[10], b[11]);
-          
-          if (time(NULL) > close_time) {
-            fclose(tmp_stream);
-            tmp_stream = NULL;
-            clear_dice();
-            
-            SDL_Event tmp_event;
-            tmp_event.type = SDL_KEYUP;
-            tmp_event.key.keysym.sym = SDLK_SPACE;
-            SDL_PushEvent(&tmp_event);
-          }
-        }
-      }
-    }
+//    for (int i = 0; i < num_dice; ++i) {
+//      if (dice[i] && !dice_val[i]) {
+//      }
+//    }
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
