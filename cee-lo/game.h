@@ -1,22 +1,24 @@
 //
-//  helper.h
-//  opengl_testbed
+//  game.h
+//  cee-lo
 //
-//  Created by George Watson on 21/06/2017.
+//  Created by George Watson on 29/06/2017.
 //  Copyright © 2017 George Watson. All rights reserved.
 //
 
-#ifndef helper_h
-#define helper_h
+#ifndef game_h
+#define game_h
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
 #include "3rdparty/glad.h"
 #define STBI_ONLY_PNG
 #include "3rdparty/stb_image.h"
+#include "3rdparty/linalgb.h"
+#include <ode/ode.h>
+#include "obj.h"
 
 #define rand_range(min, max) (rand() % (max + 1 - min) + min)
 #define frand_range(min, max) ((max - min) * ((((float)rand()) / (float) RAND_MAX)) + min)
@@ -35,4 +37,37 @@ GLuint load_shader_str(const char*, const char*);
 GLuint load_shader_file(const char*, const char*);
 GLuint load_texture(const char*, int*, int*);
 
-#endif /* helper_h */
+typedef struct {
+  vec3 specular;
+  float shininess;
+} material_t;
+
+typedef struct {
+  dGeomID geom;
+  dBodyID body;
+  mat4 world;
+  obj_t* model;
+  material_t mat;
+} ode_t;
+
+typedef struct {
+  vec3 position;
+  vec3 direction;
+  float cutOff;
+  float outerCutOff;
+  
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+  
+  float constant;
+  float linear;
+  float quadratic;
+} light_t;
+
+void draw_ode(ode_t*, GLuint);
+void update_ode(ode_t*, int);
+void free_ode(ode_t*);
+void add_light(light_t*, GLuint);
+
+#endif /* game_h */

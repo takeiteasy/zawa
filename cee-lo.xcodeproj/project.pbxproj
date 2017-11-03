@@ -11,9 +11,8 @@
 		886467F61FA0F5EA0006EBDD /* libode.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 886467F51FA0F5EA0006EBDD /* libode.6.dylib */; };
 		D3533D4A1F000A01005AFFDB /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D491F000A01005AFFDB /* main.c */; };
 		D3533D521F000A09005AFFDB /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D3533D511F000A09005AFFDB /* OpenGL.framework */; };
-		D3533D601F00159B005AFFDB /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D5E1F00159B005AFFDB /* helpers.c */; };
 		D3533D651F006F4B005AFFDB /* obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3533D631F006F4B005AFFDB /* obj.c */; };
-		D3EA46711F051C88007EAE1B /* game_obj.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA466F1F051C88007EAE1B /* game_obj.c */; };
+		D3EA46711F051C88007EAE1B /* game.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA466F1F051C88007EAE1B /* game.c */; };
 		D3EA467C1F052F47007EAE1B /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA46751F052F47007EAE1B /* stb_image.c */; };
 		D3EA467D1F052F47007EAE1B /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA46771F052F47007EAE1B /* glad.c */; };
 		D3EA467E1F052F47007EAE1B /* linalgb.c in Sources */ = {isa = PBXBuildFile; fileRef = D3EA467A1F052F47007EAE1B /* linalgb.c */; };
@@ -37,12 +36,10 @@
 		D3533D461F000A01005AFFDB /* cee-lo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "cee-lo"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3533D491F000A01005AFFDB /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		D3533D511F000A09005AFFDB /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
-		D3533D5E1F00159B005AFFDB /* helpers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = helpers.c; sourceTree = "<group>"; };
-		D3533D5F1F00159B005AFFDB /* helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = helpers.h; sourceTree = "<group>"; };
 		D3533D631F006F4B005AFFDB /* obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = obj.c; sourceTree = "<group>"; };
 		D3533D641F006F4B005AFFDB /* obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = obj.h; sourceTree = "<group>"; };
-		D3EA466F1F051C88007EAE1B /* game_obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = game_obj.c; sourceTree = "<group>"; };
-		D3EA46701F051C88007EAE1B /* game_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game_obj.h; sourceTree = "<group>"; };
+		D3EA466F1F051C88007EAE1B /* game.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = game.c; sourceTree = "<group>"; };
+		D3EA46701F051C88007EAE1B /* game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game.h; sourceTree = "<group>"; };
 		D3EA46751F052F47007EAE1B /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = stb_image.c; path = 3rdparty/stb_image.c; sourceTree = "<group>"; };
 		D3EA46761F052F47007EAE1B /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_image.h; path = 3rdparty/stb_image.h; sourceTree = "<group>"; };
 		D3EA46771F052F47007EAE1B /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = glad.c; path = 3rdparty/glad.c; sourceTree = "<group>"; };
@@ -91,12 +88,10 @@
 			children = (
 				D3EA46741F052F3B007EAE1B /* 3rdparty */,
 				D3533D491F000A01005AFFDB /* main.c */,
-				D3533D5E1F00159B005AFFDB /* helpers.c */,
-				D3533D5F1F00159B005AFFDB /* helpers.h */,
 				D3533D631F006F4B005AFFDB /* obj.c */,
 				D3533D641F006F4B005AFFDB /* obj.h */,
-				D3EA466F1F051C88007EAE1B /* game_obj.c */,
-				D3EA46701F051C88007EAE1B /* game_obj.h */,
+				D3EA466F1F051C88007EAE1B /* game.c */,
+				D3EA46701F051C88007EAE1B /* game.h */,
 				D3EA468A1F05E9F9007EAE1B /* Icosphere_obj.h */,
 			);
 			path = "cee-lo";
@@ -186,9 +181,8 @@
 				D3533D651F006F4B005AFFDB /* obj.c in Sources */,
 				D3533D4A1F000A01005AFFDB /* main.c in Sources */,
 				D3EA467E1F052F47007EAE1B /* linalgb.c in Sources */,
-				D3533D601F00159B005AFFDB /* helpers.c in Sources */,
 				D3EA467C1F052F47007EAE1B /* stb_image.c in Sources */,
-				D3EA46711F051C88007EAE1B /* game_obj.c in Sources */,
+				D3EA46711F051C88007EAE1B /* game.c in Sources */,
 				D3EA467D1F052F47007EAE1B /* glad.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

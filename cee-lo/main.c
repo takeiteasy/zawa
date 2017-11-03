@@ -11,8 +11,7 @@
 #include "3rdparty/glad.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
-
-#include "game_obj.h"
+#include "game.h"
 #include "Icosphere_obj.h"
 
 #define RES(X) "/Users/roryb/Dropbox/git/chinchirorin/res/" #X
@@ -27,7 +26,7 @@ static dJointGroupID contact_group;
 #define MAX_CONTACTS 8
 static dContact contact[MAX_CONTACTS];
 #define MAX_DICE 3
-static game_obj_t* dice[MAX_DICE];
+static ode_t* dice[MAX_DICE];
 static float dice_val[MAX_DICE];
 static int num_dice = 0;
 
@@ -209,12 +208,12 @@ int main(int argc, const char * argv[]) {
   GLuint dice_color_loc    = glGetUniformLocation(dice_shader, "die_color");
   vec3 die_color = vec3_new(.2f, .2f, .2f);
   
-  game_obj_t plane;
+  ode_t plane;
   plane.geom = dCreatePlane(space, 0, 1, 0, 0);
   plane.model = &plane_obj;
   plane.world = mat4_mul_mat4(mat4_id(), mat4_scale(vec3_new(5, 5, 5)));
   
-  game_obj_t bowl;
+  ode_t bowl;
   bowl.model = &bowl_obj;
   bowl.mat.shininess = 10.f;
   bowl.mat.specular = vec3_new(.25f, .25f, .25f);
@@ -268,48 +267,50 @@ int main(int argc, const char * argv[]) {
           hand_world.xw = clamp(hand_world.xw, -.5f, .45f);
           break;
         case SDL_KEYUP:
-          if (e.key.keysym.sym == SDLK_SPACE) {
-            if (num_dice >= MAX_DICE)
+          switch (e.key.keysym.sym) {
+            case SDLK_SPACE:
+              if (num_dice >= MAX_DICE)
+                break;
+              
+              ode_t* tmp = (ode_t*)malloc(sizeof(ode_t));
+              tmp->body = dBodyCreate(world);
+              dMass mass;
+              dMassSetBox(&mass, 1, 1, 1, 1);
+              dBodySetMass(tmp->body, &mass);
+              dBodySetPosition(tmp->body, hand_world.xw, hand_world.yw, hand_world.zw);
+              
+              dMatrix3 R;
+              vec3 rand_euler = vec3_new(rand_angle, rand_angle, rand_angle);
+              dRFromEulerAngles(R, rand_euler.x, rand_euler.y, rand_euler.z);
+              dBodySetRotation(tmp->body, R);
+              
+              vec3 vel = vec3_new(force_range, force_range, force_range);
+              vec3 force = vec3_mul_vec3(vec3_normalize(fire_forward), vel);
+              dBodySetLinearVel(tmp->body, force.x, force.y, force.z);
+              force = vec3_cross(fire_forward, vec3_mul(vec3_neg(vel), 3.f));
+              dBodySetAngularVel(tmp->body, force.x, force.y, force.z);
+              
+              tmp->geom = dCreateBox(space, .2, .2, .2);
+              dGeomSetBody(tmp->geom, tmp->body);
+              
+              tmp->model = &cube_obj;
+              tmp->mat.shininess = 32.f;
+              tmp->mat.specular = vec3_new(.5f, .5f, .5f);
+              
+              dice[num_dice] = tmp;
+              num_dice = min(++num_dice, MAX_DICE);
               break;
-            
-            game_obj_t* tmp = (game_obj_t*)malloc(sizeof(game_obj_t));
-            tmp->body = dBodyCreate(world);
-            dMass mass;
-            dMassSetBox(&mass, 1, 1, 1, 1);
-            dBodySetMass(tmp->body, &mass);
-            dBodySetPosition(tmp->body, hand_world.xw, hand_world.yw, hand_world.zw);
-            
-            dMatrix3 R;
-            vec3 rand_euler = vec3_new(rand_angle, rand_angle, rand_angle);
-            dRFromEulerAngles(R, rand_euler.x, rand_euler.y, rand_euler.z);
-            dBodySetRotation(tmp->body, R);
-
-            vec3 vel = vec3_new(force_range, force_range, force_range);
-            vec3 force = vec3_mul_vec3(vec3_normalize(fire_forward), vel);
-            dBodySetLinearVel(tmp->body, force.x, force.y, force.z);
-            force = vec3_cross(fire_forward, vec3_mul(vec3_neg(vel), 3.f));
-            dBodySetAngularVel(tmp->body, force.x, force.y, force.z);
-            
-            tmp->geom = dCreateBox(space, .2, .2, .2);
-            dGeomSetBody(tmp->geom, tmp->body);
-            
-            tmp->model = &cube_obj;
-            tmp->mat.texture = 0;
-            tmp->mat.shininess = 32.f;
-            tmp->mat.specular = vec3_new(.5f, .5f, .5f);
-            
-            dice[num_dice] = tmp;
-            num_dice = min(++num_dice, MAX_DICE);
-          }
-          else if (e.key.keysym.sym == SDLK_ESCAPE)
-            clear_dice();
-          else if (e.key.keysym.sym == SDLK_c) {
-            plane_color = vec3_new(frand_01, frand_01, frand_01);
-            die_color = vec3_new(1.f - plane_color.x, 1.f - plane_color.y, 1.f - plane_color.z);
-          }
-          else if (e.key.keysym.sym == SDLK_v) {
-            plane_color = vec3_new(0.f, 0.f, 0.f);
-            die_color   = vec3_new(.2f, .2f, .2f);
+            case SDLK_ESCAPE:
+              clear_dice();
+              break;
+            case SDLK_c:
+              plane_color = vec3_new(frand_01, frand_01, frand_01);
+              die_color = vec3_new(1.f - plane_color.x, 1.f - plane_color.y, 1.f - plane_color.z);
+              break;
+            case SDLK_v:
+              plane_color = vec3_new(0.f, 0.f, 0.f);
+              die_color   = vec3_new(.2f, .2f, .2f);
+              break;
           }
           break;
       }
@@ -334,7 +335,7 @@ int main(int argc, const char * argv[]) {
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &proj.m[0]);
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view.m[0]);
     
-    draw_game_obj(&bowl, bowl_shader);
+    draw_ode(&bowl, bowl_shader);
     
     glUseProgram(dice_shader);
     
@@ -347,8 +348,8 @@ int main(int argc, const char * argv[]) {
     
     for (int i = 0; i < MAX_DICE; ++i) {
       if (dice[i] && !dice_val[i]) {
-        update_game_obj(dice[i], 1);
-        draw_game_obj(dice[i], dice_shader);
+        update_ode(dice[i], 1);
+        draw_ode(dice[i], dice_shader);
       }
     }
     
@@ -362,7 +363,7 @@ int main(int argc, const char * argv[]) {
     glUniform3f(plane_viewPos_loc, view_pos.x, view_pos.y, view_pos.z);
     glUniform3f(plane_color_loc, plane_color.x, plane_color.y, plane_color.z);
     
-    draw_obj(&plane_obj);
+    draw_ode(&plane, plane_shader);
     
     glUseProgram(hand_shader);
     
@@ -383,10 +384,10 @@ int main(int argc, const char * argv[]) {
   
   for (int i = 0; i < MAX_DICE; ++i)
     if (dice[i])
-      free_game_obj(dice[i]);
-  free_game_obj(&plane);
+      free_ode(dice[i]);
+  free_ode(&plane);
   dGeomTriMeshDataDestroy(bowl_tri);
-  free_game_obj(&bowl);
+  free_ode(&bowl);
   glDeleteProgram(bowl_shader);
   glDeleteProgram(plane_shader);
   glDeleteProgram(dice_shader);
