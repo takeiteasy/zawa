@@ -66,7 +66,6 @@ typedef struct {
 } light_t;
 
 void draw_ode(ode_t*, GLuint);
-void update_ode(ode_t*, int);
 void free_ode(ode_t*);
 void add_light(light_t*, GLuint);
 

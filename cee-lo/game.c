@@ -8,7 +8,7 @@
 
 #include "game.h"
 
-char* __load_file(const char* path) {
+char* load_file_to_mem(const char* path) {
   FILE *file = fopen(path, "rb");
   if (!file) {
     fprintf(stderr, "fopen \"%s\" failed: %d %s\n", path, errno, strerror(errno));
@@ -26,7 +26,7 @@ char* __load_file(const char* path) {
   return data;
 }
 
-GLuint __make_shader(GLenum type, const char* src) {
+GLuint make_shader(GLenum type, const char* src) {
   GLuint shader = glCreateShader(type);
   glShaderSource(shader, 1, &src, NULL);
   glCompileShader(shader);
@@ -47,7 +47,7 @@ GLuint __make_shader(GLenum type, const char* src) {
   return shader;
 }
 
-GLuint __make_program(GLuint vert, GLuint frag) {
+GLuint make_program(GLuint vert, GLuint frag) {
   GLuint program = glCreateProgram();
   glAttachShader(program, vert);
   glAttachShader(program, frag);
@@ -75,16 +75,16 @@ GLuint __make_program(GLuint vert, GLuint frag) {
 }
 
 GLuint load_shader_str(const char* vert, const char* frag) {
-  return __make_program(__make_shader(GL_VERTEX_SHADER,    vert),
-                        __make_shader(GL_FRAGMENT_SHADER, frag));
+  return make_program(make_shader(GL_VERTEX_SHADER,    vert),
+                        make_shader(GL_FRAGMENT_SHADER, frag));
 }
 
 GLuint load_shader_file(const char* _vert, const char* _frag) {
-  const char* vert = __load_file(_vert);
-  const char* frag = __load_file(_frag);
+  const char* vert = load_file_to_mem(_vert);
+  const char* frag = load_file_to_mem(_frag);
   
-  GLuint ret = __make_program(__make_shader(GL_VERTEX_SHADER,    vert),
-                              __make_shader(GL_FRAGMENT_SHADER, frag));
+  GLuint ret = make_program(make_shader(GL_VERTEX_SHADER,    vert),
+                              make_shader(GL_FRAGMENT_SHADER, frag));
   free((char*)vert);
   free((char*)frag);
   
@@ -105,19 +105,10 @@ GLuint load_texture(const char* src, int* width, int* height) {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
   glGenerateMipmap(GL_TEXTURE_2D);
   
-  
   stbi_image_free(data);
   
   return id;
 }
-
-static mat4 dice_scale = {
-  .1f, 0.f, 0.f, 0.f,
-  0.f, .1f, 0.f, 0.f,
-  0.f, 0.f, .1f, 0.f,
-  0.f, 0.f, 0.f, 1.f
-};
-static const dReal *t, *r;
 
 void draw_ode(ode_t* o, GLuint shader) {
   glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &o->world.m[0]);
@@ -126,18 +117,6 @@ void draw_ode(ode_t* o, GLuint shader) {
   glUniform1f(glGetUniformLocation(shader, "material.shininess"), o->mat.shininess);
   
   draw_obj(o->model);
-}
-
-void update_ode(ode_t* o, int scale) {
-  t = dBodyGetPosition(o->body);
-  r = dBodyGetRotation(o->body);
-  
-  o->world = mat4_new(r[0], r[1], r[2],  t[0],
-                      r[4], r[5], r[6],  t[1],
-                      r[8], r[9], r[10], t[2],
-                      0.f,  0.f,  0.f,   1.f);
-  if (scale)
-    o->world = mat4_mul_mat4(o->world, dice_scale);
 }
 
 void free_ode(ode_t* o) {

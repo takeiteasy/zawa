@@ -14,7 +14,7 @@
 #include "game.h"
 #include "Icosphere_obj.h"
 
-#define RES(X) "/Users/roryb/Dropbox/git/chinchirorin/res/" #X
+#define RES(X) "/Users/roryb/Documents/git/chinchirorin/res/" #X
 
 static const int SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480, FBO_SIZE = 1024;
 
@@ -29,6 +29,13 @@ static dContact contact[MAX_CONTACTS];
 static ode_t* dice[MAX_DICE];
 static float dice_val[MAX_DICE];
 static int num_dice = 0;
+static mat4 dice_scale = {
+  .1f, 0.f, 0.f, 0.f,
+  0.f, .1f, 0.f, 0.f,
+  0.f, 0.f, .1f, 0.f,
+  0.f, 0.f, 0.f, 1.f
+};
+static const dReal *t, *r;
 
 #undef GLAD_DEBUG
 
@@ -68,10 +75,10 @@ void collide(void* data, dGeomID o1, dGeomID o2) {
     return;
   
   for (int i = 0; i < dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact)); i++) {
-    contact[i].surface.mode = dContactBounce | dContactSoftCFM;
+    contact[i].surface.mode = dContactBounce;
     contact[i].surface.mu = dInfinity;
     contact[i].surface.mu2 = 0;
-    contact[i].surface.bounce = 0.3;
+    contact[i].surface.bounce = 0.5;
     
     dJointID c = dJointCreateContact(world, contact_group, &contact[i]);
     dJointAttach(c, b1, b2);
@@ -106,7 +113,7 @@ int main(int argc, const char * argv[]) {
   window = SDL_CreateWindow("ざわ。。。ざわ。。。",
                             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                             SCREEN_WIDTH, SCREEN_HEIGHT,
-                            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+                            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
   if (!window) {
     fprintf(stderr, "Failed to create SDL window!\n");
     return -1;
@@ -126,7 +133,6 @@ int main(int argc, const char * argv[]) {
 #ifdef GLAD_DEBUG
   glad_set_pre_callback(pre_gl_call);
 #endif
-  
   glad_set_post_callback(post_gl_call);
   
   printf("Vendor:   %s\n",   glGetString(GL_VENDOR));
@@ -134,7 +140,6 @@ int main(int argc, const char * argv[]) {
   printf("Version:  %s\n",   glGetString(GL_VERSION));
   printf("GLSL:     %s\n\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
   
-//  glClearColor(220.0f/255.0f, 220.0f/255.0f, 220.0f/255.0f, 1.0f);
   glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
@@ -153,8 +158,8 @@ int main(int argc, const char * argv[]) {
   dWorldSetMaxAngularSpeed(world, 200);
   dWorldSetContactMaxCorrectingVel(world, 0.2);
   dWorldSetContactSurfaceLayer(world, 0.001);
-  dWorldSetCFM(world, 1E-13);
-  dWorldSetERP(world, 0.5);
+  dWorldSetCFM(world, 1E-15);
+  dWorldSetERP(world, 10);
   contact_group = dJointGroupCreate(0);
   
   mat4 proj = mat4_perspective(45.f, .1f, 1000.f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
@@ -166,16 +171,16 @@ int main(int argc, const char * argv[]) {
   vec3 fire_forward = vec3_new(0.f, -0.5f, -.86f);
   
   light_t spotlight;
-  spotlight.position = vec3_new(0.f, 7.f, 0.f);
-  spotlight.direction = vec3_new(0.f, -1.f, 0.f);
-  spotlight.cutOff = cosf(DEG2RAD(12.5f));
+  spotlight.position    = vec3_new(0.f, 7.f, 0.f);
+  spotlight.direction   = vec3_new(0.f, -1.f, 0.f);
+  spotlight.cutOff      = cosf(DEG2RAD(12.5f));
   spotlight.outerCutOff = cosf(DEG2RAD(17.5f));
-  spotlight.ambient = vec3_new(.5f, .5f, .5f);
-  spotlight.diffuse = vec3_new(1.f, 1.f, 1.f);
-  spotlight.specular = vec3_new(1.f, 1.f, 1.f);
-  spotlight.constant = 1.f;
-  spotlight.linear = .09f;
-  spotlight.quadratic = .032f;
+  spotlight.ambient     = vec3_new(.5f, .5f, .5f);
+  spotlight.diffuse     = vec3_new(1.f, 1.f, 1.f);
+  spotlight.specular    = vec3_new(1.f, 1.f, 1.f);
+  spotlight.constant    = 1.f;
+  spotlight.linear      = .09f;
+  spotlight.quadratic   = .032f;
   
   GLuint bowl_shader  = load_shader_file(RES(default.vert.glsl), RES(bowl.frag.glsl));
   GLuint plane_shader = load_shader_file(RES(default.vert.glsl), RES(plane.frag.glsl));
@@ -211,7 +216,9 @@ int main(int argc, const char * argv[]) {
   ode_t plane;
   plane.geom = dCreatePlane(space, 0, 1, 0, 0);
   plane.model = &plane_obj;
-  plane.world = mat4_mul_mat4(mat4_id(), mat4_scale(vec3_new(5, 5, 5)));
+  plane.world = mat4_mul_mat4(mat4_id(),
+                              mat4_scale(vec3_new(5, 5, 5)));
+  plane.body = NULL;
   
   ode_t bowl;
   bowl.model = &bowl_obj;
@@ -221,7 +228,8 @@ int main(int argc, const char * argv[]) {
   dGeomTriMeshDataBuildSimple(bowl_tri, Icosphere_vertices, Icosphere_num_vertices, Icosphere_indices, Icosphere_num_indices);
   bowl.geom = dCreateTriMesh(space, bowl_tri, NULL, NULL, NULL);
   dGeomSetPosition(bowl.geom, 0.f, 0.85f, 0.f);
-  bowl.world = mat4_mul_mat4(mat4_id(), mat4_translation(vec3_new(0.f, .85f, 0.f)));
+  bowl.world = mat4_mul_mat4(mat4_id(),
+                             mat4_translation(vec3_new(0.f, .85f, 0.f)));
   bowl.body = NULL;
   
   mat4 hand_world = mat4_mul_mat4(mat4_mul_mat4(mat4_id(),
@@ -262,7 +270,8 @@ int main(int argc, const char * argv[]) {
           running = SDL_FALSE;
           break;
         case SDL_MOUSEMOTION:
-          hand_world = mat4_mul_mat4(hand_world, mat4_translation(vec3_new((float)e.motion.xrel * .05f, -(float)e.motion.yrel * .05f, 0)));
+          hand_world = mat4_mul_mat4(hand_world,
+                                     mat4_translation(vec3_new((float)e.motion.xrel * .05f, -(float)e.motion.yrel * .05f, 0)));
           hand_world.yw = clamp(hand_world.yw, 1.3f, 2.f);
           hand_world.xw = clamp(hand_world.xw, -.5f, .45f);
           break;
@@ -305,7 +314,7 @@ int main(int argc, const char * argv[]) {
               break;
             case SDLK_c:
               plane_color = vec3_new(frand_01, frand_01, frand_01);
-              die_color = vec3_new(1.f - plane_color.x, 1.f - plane_color.y, 1.f - plane_color.z);
+              die_color   = vec3_new(1.f - plane_color.x, 1.f - plane_color.y, 1.f - plane_color.z);
               break;
             case SDLK_v:
               plane_color = vec3_new(0.f, 0.f, 0.f);
@@ -317,14 +326,18 @@ int main(int argc, const char * argv[]) {
     }
     
     dSpaceCollide(space, 0, collide);
-    dWorldQuickStep(world, 1.f / 60.f);
+    dWorldQuickStep(world, 1.f / 60.f); // 60.f
     dJointGroupEmpty(contact_group);
     
-//    for (int i = 0; i < num_dice; ++i) {
-//      if (dice[i] && !dice_val[i]) {
-//      }
-//    }
-    
+    for (int i = 0; i < num_dice; ++i) {
+      if (dice[i] && !dice_val[i]) {
+        const dReal* r = dBodyGetQuaternion(dice[i]->body);
+        quat q = quat_new(r[1], r[2], r[3], r[0]);
+        vec3 v = quat_to_euler(q);
+        printf("%d: %f %f %f\n", i, v.x, v.y, v.z);
+      }
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glUseProgram(bowl_shader);
@@ -333,14 +346,14 @@ int main(int argc, const char * argv[]) {
     glUniform3f(viewPos_loc, view_pos.x, view_pos.y, view_pos.z);
     
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &proj.m[0]);
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view.m[0]);
+    glUniformMatrix4fv(view_loc,       1, GL_FALSE, &view.m[0]);
     
     draw_ode(&bowl, bowl_shader);
     
     glUseProgram(dice_shader);
     
-    glUniformMatrix4fv(dice_proj_loc,  1, GL_FALSE, &proj.m[0]);
-    glUniformMatrix4fv(dice_view_loc,  1, GL_FALSE, &view.m[0]);
+    glUniformMatrix4fv(dice_proj_loc, 1, GL_FALSE, &proj.m[0]);
+    glUniformMatrix4fv(dice_view_loc, 1, GL_FALSE, &view.m[0]);
     
     add_light(&spotlight, dice_shader);
     glUniform3f(dice_viewPos_loc, view_pos.x, view_pos.y, view_pos.z);
@@ -348,7 +361,15 @@ int main(int argc, const char * argv[]) {
     
     for (int i = 0; i < MAX_DICE; ++i) {
       if (dice[i] && !dice_val[i]) {
-        update_ode(dice[i], 1);
+        t = dBodyGetPosition(dice[i]->body);
+        r = dBodyGetRotation(dice[i]->body);
+        
+        dice[i]->world = mat4_new(r[0], r[1], r[2],  t[0],
+                                  r[4], r[5], r[6],  t[1],
+                                  r[8], r[9], r[10], t[2],
+                                  0.f,  0.f,  0.f,   1.f);
+        dice[i]->world = mat4_mul_mat4(dice[i]->world, dice_scale);
+        
         draw_ode(dice[i], dice_shader);
       }
     }
@@ -368,8 +389,8 @@ int main(int argc, const char * argv[]) {
     glUseProgram(hand_shader);
     
     glUniformMatrix4fv(glGetUniformLocation(hand_shader, "projection"),  1, GL_FALSE, &proj.m[0]);
-    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "view"),  1, GL_FALSE, &view.m[0]);
-    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "model"), 1, GL_FALSE, &hand_world.m[0]);
+    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "view"),        1, GL_FALSE, &view.m[0]);
+    glUniformMatrix4fv(glGetUniformLocation(hand_shader, "model"),       1, GL_FALSE, &hand_world.m[0]);
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, hand_tex);
