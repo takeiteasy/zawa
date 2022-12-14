@@ -1,7 +1,7 @@
 @ctype vec3 hmm_vec3
 @ctype mat4 hmm_mat4
 
-@vs vs
+@vs vsDice
 in vec3 pos;
 in vec3 norm;
 in vec2 texcoord;
@@ -9,7 +9,7 @@ in vec3 inst_pos;
 in vec3 inst_col;
 in vec3 inst_vel;
 
-uniform vs_params {
+uniform vs_dice_params {
     mat4 model;
     mat4 view;
     mat4 projection;
@@ -29,7 +29,7 @@ void main() {
 }
 @end
 
-@fs fs
+@fs fsDice
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
@@ -46,4 +46,5 @@ void main() {
 }
 @end
 
-@program dice vs fs
+@program dice vsDice fsDice
+
