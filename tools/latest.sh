@@ -8,6 +8,7 @@ download "https://raw.githubusercontent.com/floooh/sokol/master/sokol_gfx.h"
 download "https://raw.githubusercontent.com/floooh/sokol/master/sokol_glue.h"
 download "https://raw.githubusercontent.com/floooh/sokol/master/sokol_app.h"
 download "https://raw.githubusercontent.com/floooh/sokol/master/sokol_audio.h"
+download "https://raw.githubusercontent.com/HandmadeMath/HandmadeMath/master/HandmadeMath.h"
 download "https://raw.githubusercontent.com/thisistherk/fast_obj/master/fast_obj.h" "tools/"
 download "https://raw.githubusercontent.com/nothings/stb/master/stb_image.h" "tools/"
 

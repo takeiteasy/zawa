@@ -57,13 +57,6 @@ int main(int argc, const char *argv[]) {
     int w, h, n;
     unsigned char *data = stbi_load(argv[1], &w, &h, &n, 4);
     BAIL(data && w > 0 && h > 0, "Failed to load image at: \"%s\"", argv[1]);
-    int *newData = malloc(sizeof(int) * w * h);
-    BAIL(newData, "%s", "Out of memory");
-    for (int x = 0; x < w; x++)
-        for (int y = 0; y < h; y++) {
-            unsigned char *p = data + (x + w * y) * n;
-            PSET(x, y, p[0], p[1], p[2], n == 4 ? p[3] : 255);
-        }
     
     char outPath[512];
     int pathLength = strlen(argv[1]);
@@ -78,16 +71,19 @@ int main(int argc, const char *argv[]) {
            "#ifndef __IMG__%s__H__\n"
            "#define __IMG__%s__H__\n",
            outName, outName);
-    const int size = w * h;
-    printf("static const float img_%s_data[%d] = {", outName, size);
+    const int size = w * h * 4;
+    printf("static const unsigned char img_%s_data[%d] = {", outName, size);
     for (int i = 0, j = 0; i < size; i++, j++) {
         if (!j)
             printf("\n\t");
-        printf("0x%08x%s", newData[i], i == size - 1 ? ",\n};\n" : ", ");
-        if (j == 2)
+        printf("%d%s", data[i], i == size - 1 ? ",\n};\n" : ", ");
+        if (j == 10)
             j = -1;
     }
+    free(data);
     printf("static const int img_%s_data_sz = %d;\n", outName, size);
+    printf("static const int img_%s_width = %d;\n", outName, w);
+    printf("static const int img_%s_height = %d;\n", outName, h);
     printf("#endif // __IMG__%s__H__\n", outName);
     return 0;
 }

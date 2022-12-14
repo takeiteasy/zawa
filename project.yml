@@ -16,6 +16,14 @@ targets:
     info:
       path: Info.plist
     sources:
+        - path: assets/
+          type: folder
+        - path: deps/
+          type: folder
+        - path: tools/
+          type: folder
+        - path: build/
+          type: folder
         - path: src/
     dependencies:
         - sdk: Cocoa.framework

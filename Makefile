@@ -31,7 +31,7 @@ SHDC_PATH=./tools/bin/$(ARCH_PATH)/sokol-shdc$(PROG_EXT)
 SHADERS=$(wildcard assets/*.glsl)
 SHADER_OUTS=$(patsubst %,%.h,$(SHADERS))
 
-all: app run
+all: app
 
 .SECONDEXPANSION:
 SHADER=$(patsubst %.glsl.h,%.glsl,$@)
@@ -68,10 +68,12 @@ IMG_OUT=$@
 
 images: $(IMGS_OUT)
 
-app: shaders models images
+assets: shaders models images
+
+app: assets
 	$(CC) -Ibuild -Ideps -fenable-matrix $(CFLAGS) $(SOURCE) -o $(EXE)
 
 run: $(EXE)
 	./$(EXE)
 
-.PHONY: all app shaders models run
+.PHONY: all app shaders models run assets images
