@@ -66,15 +66,9 @@ int main(int argc, const char *argv[]) {
         memcpy(buffer + pos + 6, mesh->texcoords + t_pos, 2 * sizeof(float));
     }
     for (int i = 0; i < sizeOfBuffer; i+=8)
-        printf("\n\t%f, %f, %f, %f, %f, %f, %f, %f,", buffer[i], buffer[i+1], buffer[i+2], buffer[i+3], buffer[i+4], buffer[i+5], buffer[i+6], buffer[i+7]);
+        printf("\n\t%f, %f, %f,\t%f, %f, %f,\t%f, %f,", buffer[i], buffer[i+1], buffer[i+2], buffer[i+3], buffer[i+4], buffer[i+5], buffer[i+6], buffer[i+7]);
     printf("\n};\nstatic unsigned int obj_%s_data_size = %zu;\n", outName, sizeOfBuffer);
     printf("static unsigned int obj_%s_face_count = %d;\n", outName, mesh->face_count * 3);
-    printf("static unsigned int obj_%s_indices[%d] = {\n", outName, mesh->index_count * 3);
-    for (int i = 0; i < mesh->index_count; i++) {
-        fastObjIndex *index = &mesh->indices[i];
-        printf("\t%d, %d, %d,\n", index->p, index->t, index->n);
-    }
-    printf("};\nstatic const int obj_%s_index_count = %d;\n", outName, mesh->index_count * 3);
     printf("#endif // __OBJ__%s__H__\n", outName);
     
     fast_obj_destroy(mesh);

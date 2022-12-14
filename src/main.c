@@ -9,37 +9,47 @@
 #include "lenna.png.h"
 #include "dice.obj.h"
 
+#define MAX_DICE 3
+
 static struct {
     float rx, ry;
     sg_pass_action pass_action;
     sg_pipeline pip;
     sg_bindings bind;
+    hmm_vec3 dicePositions[MAX_DICE];
+    hmm_vec3 diceVelocities[MAX_DICE];
+    int diceCount;
 } state;
-
-typedef struct {
-    float x, y, z;
-    uint32_t color;
-    int16_t u, v;
-} vertex_t;
 
 void init(void) {
     sg_setup(&(sg_desc){
         .context = sapp_sgcontext()
     });
+    
+    state.diceCount = MAX_DICE;
+    for (int i = 0; i < MAX_DICE; i++) {
+        state.dicePositions[i] = HMM_Vec3(i * 2.f, 0.f, 0.f);
+        state.diceVelocities[i] = HMM_Vec3(0.f, 0.f, 0.f);
+    }
 
-    sg_buffer dice = sg_make_buffer(&(sg_buffer_desc){
-        .data = (sg_range){ &obj_dice_data, obj_dice_data_size * sizeof(float) },
-        .label = "cube-vertices"
-    });
-
-    /* NOTE: SLOT_tex is provided by shader code generation */
-    sg_image img = sg_make_image(&(sg_image_desc){
-        .width = img_lenna_width,
-        .height = img_lenna_height,
-        .data.subimage[0][0] = SG_RANGE(img_lenna_data),
-        .pixel_format = SG_PIXELFORMAT_RGBA8,
-        .label = "cube-texture"
-    });
+    state.bind = (sg_bindings) {
+        .vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
+            .data = (sg_range){ &obj_dice_data, obj_dice_data_size * sizeof(float) },
+            .label = "cube-vertices"
+        }),
+        .vertex_buffers[1] = sg_make_buffer(&(sg_buffer_desc) {
+            .size = MAX_DICE * sizeof(hmm_vec3),
+            .usage = SG_USAGE_STREAM,
+            .label = "instance-data"
+        }),
+        .fs_images[SLOT_diffuse_texture] = sg_make_image(&(sg_image_desc){
+            .width = img_lenna_width,
+            .height = img_lenna_height,
+            .data.subimage[0][0] = SG_RANGE(img_lenna_data),
+            .pixel_format = SG_PIXELFORMAT_RGBA8,
+            .label = "cube-texture"
+        })
+    };
 
     /* a shader */
     sg_shader shd = sg_make_shader(phong_shader_desc(sg_query_backend()));
@@ -47,10 +57,12 @@ void init(void) {
     /* a pipeline state object */
     state.pip = sg_make_pipeline(&(sg_pipeline_desc){
         .layout = {
+            .buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE,
             .attrs = {
-                [ATTR_vs_a_pos].format = SG_VERTEXFORMAT_FLOAT3,
-                [ATTR_vs_a_normal].format = SG_VERTEXFORMAT_FLOAT3,
-                [ATTR_vs_a_tex_coords].format = SG_VERTEXFORMAT_FLOAT2
+                [ATTR_vs_a_pos] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
+                [ATTR_vs_a_normal] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
+                [ATTR_vs_a_tex_coords] = { .format=SG_VERTEXFORMAT_FLOAT2, .buffer_index=0 },
+                [ATTR_vs_inst_pos] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=1 }
             }
         },
         .shader = shd,
@@ -60,11 +72,6 @@ void init(void) {
         },
         .label = "cube-pipeline"
     });
-    
-    state.bind = (sg_bindings) {
-        .vertex_buffers[0] = dice,
-        .fs_images[SLOT_diffuse_texture] = img
-    };
 
     /* default pass action */
     state.pass_action = (sg_pass_action) {
@@ -73,6 +80,11 @@ void init(void) {
 }
 
 void frame(void) {
+    sg_update_buffer(state.bind.vertex_buffers[1], &(sg_range){
+        .ptr = state.dicePositions,
+        .size = (size_t)state.diceCount * sizeof(hmm_vec3)
+    });
+    
     /* compute model-view-projection matrix */
     const float t = (float)(sapp_frame_duration() * 60.0);
     hmm_mat4 proj = HMM_Perspective(45.0f, sapp_widthf()/sapp_heightf(), 0.01f, 1000.0f);
@@ -91,7 +103,7 @@ void frame(void) {
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(&state.bind);
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &SG_RANGE(vs_params));
-    sg_draw(0, obj_dice_face_count, 1);
+    sg_draw(0, obj_dice_face_count, state.diceCount);
     sg_end_pass();
     sg_commit();
 }
