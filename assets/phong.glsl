@@ -3,9 +3,10 @@
 
 @vs vs
 in vec3 a_pos;
-in vec3 a_color;
+in vec3 a_normal;
 in vec2 a_tex_coords;
 
+out vec3 normal;
 out vec2 tex_coords;
 
 uniform vs_params {
@@ -16,11 +17,13 @@ uniform vs_params {
 
 void main() {
     gl_Position = projection * view * model * vec4(a_pos, 1.0);
+    normal = normal;
     tex_coords = a_tex_coords;
 }
 @end
 
 @fs fs
+in vec3 normal;
 in vec2 tex_coords;
 
 out vec4 frag_color;

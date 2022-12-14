@@ -53,7 +53,7 @@ int main(int argc, const char *argv[]) {
     BAIL(!access(argv[1], F_OK), "File doesn't exist at: \"%s\"", argv[1]);
     
 #define PSET(X, Y, R, G, B, A) \
-    newData[y * w + x] = ((unsigned int)(A) << 24) | ((unsigned int)(R) << 16) | ((unsigned int)(G) << 8) | (B)
+    newData[y * w + x] = ((unsigned int)(R) << 24) | ((unsigned int)(G) << 16) | ((unsigned int)(B) << 8) | (A)
     int w, h, n;
     unsigned char *data = stbi_load(argv[1], &w, &h, &n, 4);
     BAIL(data && w > 0 && h > 0, "Failed to load image at: \"%s\"", argv[1]);
@@ -77,7 +77,7 @@ int main(int argc, const char *argv[]) {
         if (!j)
             printf("\n\t");
         printf("%d%s", data[i], i == size - 1 ? ",\n};\n" : ", ");
-        if (j == 10)
+        if (j == 2)
             j = -1;
     }
     free(data);

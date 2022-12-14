@@ -52,19 +52,23 @@ int main(int argc, const char *argv[]) {
            "#ifndef __OBJ__%s__H__\n"
            "#define __OBJ__%s__H__\n",
            outName, outName);
-#define PRINT(N, V, W) \
-    printf("static float obj_%s_%s[%d] = {", outName, #N, mesh->V##_count); \
-    for (int i = 0, j = 0; i < mesh->V##_count; i++, j++) { \
-        if (!j) \
-            printf("\n\t"); \
-        printf("%f%s", mesh->N[i], i == mesh->V##_count - 1 ? ",\n};\n" : ", "); \
-        if (j == (W)-1) \
-            j = -1; \
-    } \
-    printf("static const int obj_%s_%s_length = %d;\n", outName, #V, mesh->V##_count);
-    PRINT(positions, position, 3);
-    PRINT(texcoords, texcoord, 2);
-    PRINT(normals, normal, 3);
+    size_t sizeOfBuffer = mesh->face_count * 3 * 8;
+    printf("static float obj_%s_data[%zu] = {", outName, sizeOfBuffer);
+    float buffer[sizeOfBuffer];
+    for (int i = 0; i < mesh->face_count * 3; i++) {
+        fastObjIndex vertex = mesh->indices[i];
+        unsigned int pos = i * 8;
+        unsigned int v_pos = vertex.p * 3;
+        unsigned int n_pos = vertex.n * 3;
+        unsigned int t_pos = vertex.t * 2;
+        memcpy(buffer + pos, mesh->positions + v_pos, 3 * sizeof(float));
+        memcpy(buffer + pos + 3, mesh->normals + n_pos, 3 * sizeof(float));
+        memcpy(buffer + pos + 6, mesh->texcoords + t_pos, 2 * sizeof(float));
+    }
+    for (int i = 0; i < sizeOfBuffer; i+=8)
+        printf("\n\t%f, %f, %f, %f, %f, %f, %f, %f,", buffer[i], buffer[i+1], buffer[i+2], buffer[i+3], buffer[i+4], buffer[i+5], buffer[i+6], buffer[i+7]);
+    printf("\n};\nstatic unsigned int obj_%s_data_size = %zu;\n", outName, sizeOfBuffer);
+    printf("static unsigned int obj_%s_face_count = %d;\n", outName, mesh->face_count * 3);
     printf("static unsigned int obj_%s_indices[%d] = {\n", outName, mesh->index_count * 3);
     for (int i = 0; i < mesh->index_count; i++) {
         fastObjIndex *index = &mesh->indices[i];

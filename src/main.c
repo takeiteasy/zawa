@@ -7,6 +7,7 @@
 #include "HandmadeMath.h"
 #include "phong.glsl.h"
 #include "lenna.png.h"
+#include "dice.obj.h"
 
 static struct {
     float rx, ry;
@@ -26,54 +27,9 @@ void init(void) {
         .context = sapp_sgcontext()
     });
 
-    float vertices[] = {
-        /* pos                  color                       uvs */
-        -1.0f, -1.0f, -1.0f,    1.0f, 0.0f, 0.0f, 1.0f,     0.0f, 0.0f,
-        1.0f, -1.0f, -1.0f,    1.0f, 0.0f, 0.0f, 1.0f,     1.0f, 0.0f,
-        1.0f,  1.0f, -1.0f,    1.0f, 0.0f, 0.0f, 1.0f,     1.0f, 1.0f,
-        -1.0f,  1.0f, -1.0f,    1.0f, 0.0f, 0.0f, 1.0f,     0.0f, 1.0f,
-        
-        -1.0f, -1.0f,  1.0f,    0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 0.0f,
-        1.0f, -1.0f,  1.0f,    0.0f, 1.0f, 0.0f, 1.0f,     1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f,    0.0f, 1.0f, 0.0f, 1.0f,     1.0f, 1.0f,
-        -1.0f,  1.0f,  1.0f,    0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 1.0f,
-        
-        -1.0f, -1.0f, -1.0f,    0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-        -1.0f,  1.0f, -1.0f,    0.0f, 0.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-        -1.0f,  1.0f,  1.0f,    0.0f, 0.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-        -1.0f, -1.0f,  1.0f,    0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-        
-        1.0f, -1.0f, -1.0f,    1.0f, 0.5f, 0.0f, 1.0f,     0.0f, 0.0f,
-        1.0f,  1.0f, -1.0f,    1.0f, 0.5f, 0.0f, 1.0f,     1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f,    1.0f, 0.5f, 0.0f, 1.0f,     1.0f, 1.0f,
-        1.0f, -1.0f,  1.0f,    1.0f, 0.5f, 0.0f, 1.0f,     0.0f, 1.0f,
-        
-        -1.0f, -1.0f, -1.0f,    0.0f, 0.5f, 1.0f, 1.0f,     0.0f, 0.0f,
-        -1.0f, -1.0f,  1.0f,    0.0f, 0.5f, 1.0f, 1.0f,     1.0f, 0.0f,
-        1.0f, -1.0f,  1.0f,    0.0f, 0.5f, 1.0f, 1.0f,     1.0f, 1.0f,
-        1.0f, -1.0f, -1.0f,    0.0f, 0.5f, 1.0f, 1.0f,     0.0f, 1.0f,
-        
-        -1.0f,  1.0f, -1.0f,    1.0f, 0.0f, 0.5f, 1.0f,     0.0f, 0.0f,
-        -1.0f,  1.0f,  1.0f,    1.0f, 0.0f, 0.5f, 1.0f,     1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f,    1.0f, 0.0f, 0.5f, 1.0f,     1.0f, 1.0f,
-        1.0f,  1.0f, -1.0f,    1.0f, 0.0f, 0.5f, 1.0f,     0.0f, 1.0f
-    };
-    uint16_t indices[] = {
-        0, 1, 2,  0, 2, 3,
-        6, 5, 4,  7, 6, 4,
-        8, 9, 10,  8, 10, 11,
-        14, 13, 12,  15, 14, 12,
-        16, 17, 18,  16, 18, 19,
-        22, 21, 20,  23, 22, 20
-    };
-    sg_buffer vbuf = sg_make_buffer(&(sg_buffer_desc){
-        .data = SG_RANGE(vertices),
+    sg_buffer dice = sg_make_buffer(&(sg_buffer_desc){
+        .data = (sg_range){ &obj_dice_data, obj_dice_data_size * sizeof(float) },
         .label = "cube-vertices"
-    });
-    sg_buffer ibuf = sg_make_buffer(&(sg_buffer_desc){
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
-        .data = SG_RANGE(indices),
-        .label = "cube-indices"
     });
 
     /* NOTE: SLOT_tex is provided by shader code generation */
@@ -93,13 +49,11 @@ void init(void) {
         .layout = {
             .attrs = {
                 [ATTR_vs_a_pos].format = SG_VERTEXFORMAT_FLOAT3,
-                [ATTR_vs_a_color].format = SG_VERTEXFORMAT_FLOAT4,
+                [ATTR_vs_a_normal].format = SG_VERTEXFORMAT_FLOAT3,
                 [ATTR_vs_a_tex_coords].format = SG_VERTEXFORMAT_FLOAT2
             }
         },
         .shader = shd,
-        .index_type = SG_INDEXTYPE_UINT16,
-        .cull_mode = SG_CULLMODE_BACK,
         .depth = {
             .compare = SG_COMPAREFUNC_LESS_EQUAL,
             .write_enabled = true
@@ -108,21 +62,20 @@ void init(void) {
     });
     
     state.bind = (sg_bindings) {
-        .vertex_buffers[0] = vbuf,
-        .index_buffer = ibuf,
+        .vertex_buffers[0] = dice,
         .fs_images[SLOT_diffuse_texture] = img
     };
 
     /* default pass action */
     state.pass_action = (sg_pass_action) {
-        .colors[0] = { .action = SG_ACTION_CLEAR, .value = { 0.25f, 0.5f, 0.75f, 1.0f } }
+        .colors[0] = { .action=SG_ACTION_CLEAR, .value={0.1f, 0.1f, 0.1f, 1.0f} }
     };
 }
 
 void frame(void) {
     /* compute model-view-projection matrix */
     const float t = (float)(sapp_frame_duration() * 60.0);
-    hmm_mat4 proj = HMM_Perspective(60.0f, sapp_widthf()/sapp_heightf(), 0.01f, 10.0f);
+    hmm_mat4 proj = HMM_Perspective(45.0f, sapp_widthf()/sapp_heightf(), 0.01f, 1000.0f);
     hmm_mat4 view = HMM_LookAt(HMM_Vec3(0.0f, 1.5f, 4.0f), HMM_Vec3(0.0f, 0.0f, 0.0f), HMM_Vec3(0.0f, 1.0f, 0.0f));
     vs_params_t vs_params;
     state.rx += 0.1f; state.ry += 0.2f;
@@ -138,7 +91,7 @@ void frame(void) {
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(&state.bind);
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_params, &SG_RANGE(vs_params));
-    sg_draw(0, 36, 1);
+    sg_draw(0, obj_dice_face_count, 1);
     sg_end_pass();
     sg_commit();
 }
