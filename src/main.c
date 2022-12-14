@@ -5,19 +5,21 @@
 #define HANDMADE_MATH_IMPLEMENTATION
 #define HANDMADE_MATH_NO_SSE
 #include "HandmadeMath.h"
-#include "phong.glsl.h"
-#include "lenna.png.h"
+#include "dice.glsl.h"
 #include "dice.obj.h"
 
 #define MAX_DICE 3
+
+typedef struct {
+    hmm_vec3 position, color, velocity;
+} die;
 
 static struct {
     float rx, ry;
     sg_pass_action pass_action;
     sg_pipeline pip;
     sg_bindings bind;
-    hmm_vec3 dicePositions[MAX_DICE];
-    hmm_vec3 diceVelocities[MAX_DICE];
+    die dice[MAX_DICE];
     int diceCount;
 } state;
 
@@ -28,8 +30,11 @@ void init(void) {
     
     state.diceCount = MAX_DICE;
     for (int i = 0; i < MAX_DICE; i++) {
-        state.dicePositions[i] = HMM_Vec3(i * 2.f, 0.f, 0.f);
-        state.diceVelocities[i] = HMM_Vec3(0.f, 0.f, 0.f);
+        state.dice[i] = (die) {
+            .position = HMM_Vec3((i-1) * 3.f, 0.f, 0.f),
+            .color = HMM_Vec3(i == 0 ? 1.f : 0.f, i == 1 ? 1.f : 0.f, i == 2 ? 1.f : 0.f),
+            .velocity = HMM_Vec3(0.f, 0.f, 0.f)
+        };
     }
 
     state.bind = (sg_bindings) {
@@ -38,31 +43,26 @@ void init(void) {
             .label = "cube-vertices"
         }),
         .vertex_buffers[1] = sg_make_buffer(&(sg_buffer_desc) {
-            .size = MAX_DICE * sizeof(hmm_vec3),
+            .size = MAX_DICE * sizeof(hmm_vec3) * 3,
             .usage = SG_USAGE_STREAM,
             .label = "instance-data"
         }),
-        .fs_images[SLOT_diffuse_texture] = sg_make_image(&(sg_image_desc){
-            .width = img_lenna_width,
-            .height = img_lenna_height,
-            .data.subimage[0][0] = SG_RANGE(img_lenna_data),
-            .pixel_format = SG_PIXELFORMAT_RGBA8,
-            .label = "cube-texture"
-        })
     };
 
     /* a shader */
-    sg_shader shd = sg_make_shader(phong_shader_desc(sg_query_backend()));
+    sg_shader shd = sg_make_shader(dice_shader_desc(sg_query_backend()));
 
     /* a pipeline state object */
     state.pip = sg_make_pipeline(&(sg_pipeline_desc){
         .layout = {
             .buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE,
             .attrs = {
-                [ATTR_vs_a_pos] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
-                [ATTR_vs_a_normal] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
-                [ATTR_vs_a_tex_coords] = { .format=SG_VERTEXFORMAT_FLOAT2, .buffer_index=0 },
-                [ATTR_vs_inst_pos] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=1 }
+                [ATTR_vs_pos] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
+                [ATTR_vs_norm] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
+                [ATTR_vs_texcoord] = { .format=SG_VERTEXFORMAT_FLOAT2, .buffer_index=0 },
+                [ATTR_vs_inst_pos] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=1 },
+                [ATTR_vs_inst_col] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=1 },
+                [ATTR_vs_inst_vel] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=1 }
             }
         },
         .shader = shd,
@@ -81,14 +81,14 @@ void init(void) {
 
 void frame(void) {
     sg_update_buffer(state.bind.vertex_buffers[1], &(sg_range){
-        .ptr = state.dicePositions,
-        .size = (size_t)state.diceCount * sizeof(hmm_vec3)
+        .ptr = state.dice,
+        .size = (size_t)state.diceCount * sizeof(hmm_vec3) * 3
     });
     
     /* compute model-view-projection matrix */
     const float t = (float)(sapp_frame_duration() * 60.0);
     hmm_mat4 proj = HMM_Perspective(45.0f, sapp_widthf()/sapp_heightf(), 0.01f, 1000.0f);
-    hmm_mat4 view = HMM_LookAt(HMM_Vec3(0.0f, 1.5f, 4.0f), HMM_Vec3(0.0f, 0.0f, 0.0f), HMM_Vec3(0.0f, 1.0f, 0.0f));
+    hmm_mat4 view = HMM_LookAt(HMM_Vec3(0.0f, 1.5f, 10.0f), HMM_Vec3(0.0f, 0.0f, 0.0f), HMM_Vec3(0.0f, 1.0f, 0.0f));
     vs_params_t vs_params;
     state.rx += 0.1f; state.ry += 0.2f;
     hmm_mat4 rxm = HMM_Rotate(state.rx * t, HMM_Vec3(1.0f, 0.0f, 0.0f));
