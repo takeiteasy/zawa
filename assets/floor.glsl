@@ -1,5 +1,5 @@
-@ctype vec3 hmm_vec3
-@ctype mat4 hmm_mat4
+@ctype vec4 vec4
+@ctype mat4 mat4
 
 @vs vsFloor
 in vec3 pos;
@@ -10,18 +10,20 @@ uniform vs_floor_params {
     mat4 model;
     mat4 view;
     mat4 projection;
+    vec4 color;
 };
 
 out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoord;
-out vec3 Color;
+out vec4 Color;
 
 void main() {
     FragPos = vec3(model * vec4(pos, 1.0));
     Normal = mat3(transpose(inverse(model))) * norm;
     gl_Position = projection * view * vec4(FragPos, 1.0);
     TexCoord = vec2(texcoord.x, -texcoord.y);
+    Color = color;
 }
 @end
 
@@ -29,7 +31,7 @@ void main() {
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
-in vec3 Color;
+in vec4 Color;
 
 out vec4 frag_color;
 
@@ -58,9 +60,7 @@ float box(vec2 _st, vec2 _size, float _smoothEdges){
 
 void main() {
     vec3 tex = vec3(box(rotate2D(tile(TexCoord.st + fract(gl_FragCoord.xy * vec2(512.f)), 24.), PI * 0.25), vec2(0.7), 0.01));
-    if (tex.x != 1 && tex.y != 1 && tex.z != 1)
-        tex = Color;
-    frag_color = vec4(tex, 1.0);
+    frag_color = tex.x != 1 && tex.y != 1 && tex.z != 1 ? Color : vec4(tex, 1);
 }
 @end
 

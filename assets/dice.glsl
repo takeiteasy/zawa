@@ -1,5 +1,4 @@
-@ctype vec3 hmm_vec3
-@ctype mat4 hmm_mat4
+@ctype mat4 mat4
 
 @vs vsDice
 in vec3 pos;
@@ -7,7 +6,6 @@ in vec3 norm;
 in vec2 texcoord;
 in vec3 inst_pos;
 in vec3 inst_col;
-in vec3 inst_vel;
 
 uniform vs_dice_params {
     mat4 model;
