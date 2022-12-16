@@ -21,7 +21,7 @@ typedef struct {
     sg_bindings bind;
     Die dice[MAX_DICE];
     int dice_count;
-} DieState;
+} DiceState;
 
 typedef struct {
     sg_pipeline pip;
@@ -30,7 +30,7 @@ typedef struct {
 
 static struct {
     sg_pass_action pass_action;
-    DieState dice;
+    DiceState dice;
     FloorState floor;
 } state;
 
@@ -143,7 +143,7 @@ void frame(void) {
         .model = Mat4(1.f),
         .view = view,
         .projection = proj,
-        .color = Vec4(1.f, 0.f, 0.f, 1.f)
+        .color = Vec4(0.f, 0.f, 0.f, 1.f)
     };
     
     sg_apply_pipeline(state.floor.pip);
@@ -190,7 +190,7 @@ sapp_desc sokol_main(int argc, char* argv[]) {
         .height = 600,
         .sample_count = 4,
         .gl_force_gles2 = true,
-        .window_title = "Textured Cube (sokol-app)",
+        .window_title = "ざわ。。。ざわ。。。",
         .icon.sokol_default = true,
     };
 }

@@ -10,20 +10,9 @@
 #define X(N)                                               \
     vec##N Vec##N##Zero(void)                              \
     {                                                      \
-        vec##N v;                                          \
+        vec##N v = {0};                                    \
         for (int i = 0; i < N; i++)                        \
             v[i] = 0;                                      \
-        return v;                                          \
-    }                                                      \
-    vec##N Vec##N(float x, ...)                            \
-    {                                                      \
-        va_list args;                                      \
-        va_start(args, N - 1);                             \
-        vec##N v;                                          \
-        v[0] = x;                                          \
-        for (int i = 0; i < N - 1; i++)                    \
-            v[i + 1] = (float)va_arg(args, double);        \
-        va_end(args);                                      \
         return v;                                          \
     }                                                      \
     float Vec##N##Sum(vec##N v)                            \
@@ -77,6 +66,9 @@ vec3 Vec3Cross(vec3 v1, vec3 v2) {
             for (int y = 0; y < N; y++)          \
                 result[x][y] = x == y ? v : 0.f; \
         return result;                           \
+    }                                            \
+    mat##N Mat##N##Identity(void) {              \
+        return Mat##N(1.f);                      \
     }
 SIZES
 #undef X

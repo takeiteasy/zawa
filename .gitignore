@@ -4,3 +4,4 @@ build/
 *.xcodeproj
 *.plist
 .DS_Store
+*.blend1
