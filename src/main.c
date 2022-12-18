@@ -21,17 +21,20 @@ typedef struct {
     sg_bindings bind;
     Die dice[MAX_DICE];
     int dice_count;
+    mat4 model;
 } DiceState;
 
 typedef struct {
     sg_pipeline pip;
     sg_bindings bind;
+    mat4 model;
 } FloorState;
 
 static struct {
     sg_pass_action pass_action;
     DiceState dice;
     FloorState floor;
+    mat4 view, proj;
 } state;
 
 void init(void) {
@@ -39,6 +42,12 @@ void init(void) {
         .context = sapp_sgcontext()
     });
     
+    state.proj = Perspective(45.0f, sapp_widthf()/sapp_heightf(), 0.01f, 1000.0f);
+    state.view = LookAt(Vec3(0.0f, 2.f, 2.2f),
+                        Vec3(0.0f, 0.8f, 0.0f),
+                        Vec3(0.0f, 1.0f, 0.0f));
+    
+    state.dice.model = Mat4Identity();
     state.dice.dice_count = 0;
     for (int i = 0; i < MAX_DICE; i++) {
         state.dice.dice[i].position = Vec3(0, 0, 0);
@@ -56,7 +65,6 @@ void init(void) {
             .label = "dice-instance-data"
         }),
     };
-    /* a pipeline state object */
     state.dice.pip = sg_make_pipeline(&(sg_pipeline_desc){
         .layout = {
             .buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE,
@@ -76,6 +84,7 @@ void init(void) {
         .label = "dice-pipeline"
     });
     
+    state.floor.model = Mat4Identity();
     state.floor.bind = (sg_bindings) {
         .vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
             .data = (sg_range){ &obj_plane_data, obj_plane_data_size * sizeof(float) },
@@ -98,7 +107,6 @@ void init(void) {
         .label = "plane-pipeline"
     });
     
-    /* default pass action */
     state.pass_action = (sg_pass_action) {
         .colors[0] = { .action=SG_ACTION_CLEAR, .value={0.f, 0.f, 0.f, 1.f} }
     };
@@ -119,36 +127,45 @@ void frame(void) {
         });
     }
     
-    /* compute model-view-projection matrix */
-    mat4 proj = Perspective(45.0f, sapp_widthf()/sapp_heightf(), 0.01f, 1000.0f);
-    mat4 view = LookAt(Vec3(0.0f, 2.f, 2.2f),
-                       Vec3(0.0f, 0.8f, 0.0f),
-                       Vec3(0.0f, 1.0f, 0.0f));
-    
     vs_dice_params_t vs_dice_params = {
-        .model = Mat4(1.f),
-        .view = view,
-        .projection = proj
+        .model = state.dice.model,
+        .view = state.view,
+        .projection = state.proj
     };
     
-    /* render the frame */
-    sg_begin_default_pass(&state.pass_action, sapp_width(), sapp_height());
+    fs_dice_light_t fs_dice_light = {
+        .LightPosition    = Vec4(0.f, 7.f, -2.f, 0.f),
+        .LightDirection   = Vec4(0.f, -1.f, 0.f, 0.f),
+        .LightCutOff      = cosf(20.f * .01745329251994329576f),
+        .LightOuterCutOff = cosf(25.f * .01745329251994329576f),
+        .LightAmbient     = Vec4(.5f, .5f, .5f, 0.f),
+        .LightDiffuse     = Vec4(1.f, 1.f, 1.f, 0.f),
+        .LightSpecular    = Vec4(1.f, 1.f, 1.f, 0.f),
+        .LightConstant    = 1.f,
+        .LightLinear      = .09f,
+        .LightQuadratic   = .032f
+    };
+    fs_floor_light_t fs_floor_light;
+    memcpy(&fs_floor_light, &fs_dice_light, sizeof(fs_floor_light));
     
+    sg_begin_default_pass(&state.pass_action, sapp_width(), sapp_height());
     sg_apply_pipeline(state.dice.pip);
     sg_apply_bindings(&state.dice.bind);
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_dice_params, &SG_RANGE(vs_dice_params));
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fs_dice_light, &SG_RANGE(fs_dice_light));
     sg_draw(0, obj_dice_face_count, state.dice.dice_count);
     
     vs_floor_params_t vs_floor_params = {
-        .model = Mat4(1.f),
-        .view = view,
-        .projection = proj,
+        .model = state.floor.model,
+        .view = state.view,
+        .projection = state.proj,
         .color = Vec4(0.f, 0.f, 0.f, 1.f)
     };
     
     sg_apply_pipeline(state.floor.pip);
     sg_apply_bindings(&state.floor.bind);
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_floor_params, &SG_RANGE(vs_floor_params));
+    sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fs_floor_light, &SG_RANGE(fs_floor_light));
     sg_draw(0, obj_plane_face_count, 1);
     
     sg_end_pass();
@@ -169,6 +186,9 @@ void input(const sapp_event *e) {
                 default:
                     break;
             }
+            break;
+        case SAPP_EVENTTYPE_RESIZED:
+            state.proj = Perspective(45.0f, sapp_widthf()/sapp_heightf(), 0.01f, 1000.0f);
             break;
         default:
             break;

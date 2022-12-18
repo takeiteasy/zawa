@@ -19,5 +19,6 @@ mv sokol-tools-bin/bin/* bin/
 rm -rf sokol-tools-bin
 
 make
+
 cd ../
 

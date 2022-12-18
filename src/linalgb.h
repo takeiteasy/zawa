@@ -8,6 +8,9 @@
 #ifndef linalgb_h
 #define linalgb_h
 #include <math.h>
+#include <float.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 #define SIZES \
     X(2)      \
@@ -15,7 +18,7 @@
     X(4)
 
 #define X(N)                                                          \
-    typedef int pos##N __attribute__((vector_size(N * sizeof(int)))); \
+    typedef int pos##N __attribute__((ext_vector_type(N))); \
     typedef float vec##N __attribute__((ext_vector_type(N)));         \
     vec##N Vec##N##Zero(void);                                        \
     float Vec##N##Sum(vec##N v);                                      \
@@ -24,7 +27,8 @@
     float Vec##N##Dot(vec##N v1, vec##N v2);                          \
     vec##N Vec##N##Normalize(vec##N v);                               \
     float Vec##N##DistSqr(vec##N v1, vec##N v2);                      \
-    float Vec##N##Dist(vec##N v1, vec##N v2);
+    float Vec##N##Dist(vec##N v1, vec##N v2);                         \
+    bool Vec##N##Cmp(vec##N v1, vec##N v2);
 SIZES
 #undef X
 typedef vec4 quat;
