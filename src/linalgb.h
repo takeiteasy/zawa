@@ -18,24 +18,20 @@
     X(4)
 
 #define X(N)                                                          \
-    typedef int pos##N __attribute__((ext_vector_type(N))); \
+    typedef int pos##N __attribute__((ext_vector_type(N)));           \
     typedef float vec##N __attribute__((ext_vector_type(N)));         \
     vec##N Vec##N##Zero(void);                                        \
-    float Vec##N##Sum(vec##N v);                                      \
     float Vec##N##LengthSqr(vec##N v);                                \
     float Vec##N##Length(vec##N v);                                   \
     float Vec##N##Dot(vec##N v1, vec##N v2);                          \
-    vec##N Vec##N##Normalize(vec##N v);                               \
-    float Vec##N##DistSqr(vec##N v1, vec##N v2);                      \
-    float Vec##N##Dist(vec##N v1, vec##N v2);                         \
-    bool Vec##N##Cmp(vec##N v1, vec##N v2);
+    vec##N Vec##N##Normalize(vec##N v);
 SIZES
 #undef X
-typedef vec4 quat;
-#define Quat(...) Vec4(__VA_ARGS__)
 #define Vec2(X, Y) (vec2){(X), (Y)}
 #define Vec3(X, Y, Z) (vec3){(X), (Y), (Z)}
 #define Vec4(X, Y, Z, W) (vec4){(X), (Y), (Z), (W)}
+typedef vec4 quat;
+#define Quat(...) Vec4(__VA_ARGS__)
 
 vec3 Vec3Cross(vec3 v1, vec3 v2);
 

@@ -15,7 +15,7 @@
             v[i] = 0;                                      \
         return v;                                          \
     }                                                      \
-    float Vec##N##Sum(vec##N v)                            \
+    static float Vec##N##Sum(vec##N v)                     \
     {                                                      \
         float r = 0.f;                                     \
         for (int i = 0; i < N; i++)                        \
@@ -41,22 +41,7 @@
         for (int i = 0; i < N; i++)                        \
             r[i] = v[i] * (1.f / l);                       \
         return r;                                          \
-    }                                                      \
-    float Vec##N##DistSqr(vec##N v1, vec##N v2)            \
-    {                                                      \
-        vec##N v = v2 - v1;                                \
-        return Vec##N##Sum(v * v);                         \
-    }                                                      \
-    float Vec##N##Dist(vec##N v1, vec##N v2)               \
-    {                                                      \
-        return sqrtf(Vec##N##DistSqr(v1, v2));             \
-    }                                                      \
-    bool Vec##N##Cmp(vec##N v1, vec##N v2) {               \
-        for (int i = 0; i < N; i++)                        \
-            if (v1[i] != v2[i])                            \
-                return false;                              \
-    return true;                                           \
-}
+    }
 SIZES
 #undef X
 

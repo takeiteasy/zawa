@@ -2,9 +2,7 @@
 #include "sokol_gfx.h"
 #include "sokol_app.h"
 #include "sokol_glue.h"
-
 #include "linalgb.h"
-
 #include "dice.glsl.h"
 #include "dice.obj.h"
 #include "floor.glsl.h"
@@ -42,15 +40,15 @@ void init(void) {
         .context = sapp_sgcontext()
     });
     
-    state.proj = Perspective(45.0f, sapp_widthf()/sapp_heightf(), 0.01f, 1000.0f);
-    state.view = LookAt(Vec3(0.0f, 2.f, 2.2f),
-                        Vec3(0.0f, 0.8f, 0.0f),
-                        Vec3(0.0f, 1.0f, 0.0f));
+    state.proj = Perspective(45.0f, sapp_widthf()/sapp_heightf(), .01f, 1000.f);
+    state.view = LookAt(Vec3(0.f, 2.f, 2.2f),
+                        Vec3(0.f, .8f, 0.f),
+                        Vec3(0.f, 1.f, 0.f));
     
     state.dice.model = Mat4Identity();
-    state.dice.dice_count = 0;
+    state.dice.dice_count = 1;
     for (int i = 0; i < MAX_DICE; i++) {
-        state.dice.dice[i].position = Vec3(0, 0, 0);
+        state.dice.dice[i].position = Vec3(0.f, 2.f, 0.f);
         state.dice.dice[i].color = Vec3(i == 0 ? 1.f : 0.f, i == 1 ? 1.f : 0.f, i == 2 ? 1.f : 0.f);
     }
         
@@ -113,7 +111,9 @@ void init(void) {
 }
 
 void frame(void) {
-//    const float t = (float)(sapp_frame_duration() * 60.0);
+    const float t = (float)(sapp_frame_duration() * 60.0);
+    for (int i = 0; i < state.dice.dice_count; i++)
+        state.dice.dice[i].position.y -= .01f * t;
     
     if (state.dice.dice_count) {
         float data[state.dice.dice_count * 3 * 2];
@@ -123,7 +123,7 @@ void frame(void) {
         }
         sg_update_buffer(state.dice.bind.vertex_buffers[1], &(sg_range){
             .ptr = data,
-            .size = (size_t)state.dice.dice_count * sizeof(vec3) * 2
+            .size = state.dice.dice_count * sizeof(vec3) * 2
         });
     }
     
@@ -188,7 +188,7 @@ void input(const sapp_event *e) {
             }
             break;
         case SAPP_EVENTTYPE_RESIZED:
-            state.proj = Perspective(45.0f, sapp_widthf()/sapp_heightf(), 0.01f, 1000.0f);
+            state.proj = Perspective(45.f, sapp_widthf()/sapp_heightf(), .01f, 1000.f);
             break;
         default:
             break;
