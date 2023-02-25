@@ -32,5 +32,5 @@ targets:
         - sdk: Quartz.framework
         - sdk: AudioToolbox.framework
     settings:
-        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/deps, $(PROJECT_DIR)/build]
+        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/deps, $(PROJECT_DIR)/build, $(PROJECT_DIR)/deps/ode/include, $(PROJECT_DIR)/deps/ode/build/include]
         OTHER_CFLAGS: [-fenable-matrix, "-x objective-c", -DSOKOL_METAL, -fobjc-arc]

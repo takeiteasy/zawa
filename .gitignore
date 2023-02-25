@@ -5,3 +5,4 @@ build/
 *.plist
 .DS_Store
 *.blend1
+deps/ode/

@@ -7,6 +7,7 @@
 #include "dice.obj.h"
 #include "floor.glsl.h"
 #include "plane.obj.h"
+#include "ode/ode.h"
 
 #define MAX_DICE 3
 
@@ -108,6 +109,8 @@ void init(void) {
     state.pass_action = (sg_pass_action) {
         .colors[0] = { .action=SG_ACTION_CLEAR, .value={0.f, 0.f, 0.f, 1.f} }
     };
+    
+    dInitODE();
 }
 
 void frame(void) {

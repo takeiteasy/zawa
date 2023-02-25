@@ -12,7 +12,16 @@ download "https://raw.githubusercontent.com/floooh/sokol/master/sokol_audio.h"
 download "https://raw.githubusercontent.com/thisistherk/fast_obj/master/fast_obj.h" "tools/"
 download "https://raw.githubusercontent.com/nothings/stb/master/stb_image.h" "tools/"
 
-cd tools
+cd deps/
+git clone https://bitbucket.org/odedevs/ode/
+cd ode/
+patch -p1 < ../../tools/mass.patch
+cd build/
+cmake ..
+make
+cd ../../../
+
+cd tools/
 
 # Download sokol-shdc-tools binaries
 rm -rf bin/ || true

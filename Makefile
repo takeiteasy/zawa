@@ -72,7 +72,7 @@ images: $(IMGS_OUT)
 assets: shaders models images
 
 app: assets
-	$(CC) -Ibuild -Ideps -fenable-matrix $(CFLAGS) $(SOURCE) -o $(EXE)
+	$(CC) -Ibuild -Ideps -Ideps/ode/include -Ideps/ode/build/include -fenable-matrix $(CFLAGS) -Ldeps/ode/build -lode $(SOURCE) -o $(EXE)
 
 run: $(EXE)
 	./$(EXE)

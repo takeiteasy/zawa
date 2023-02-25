@@ -1,0 +1,25 @@
+commit 2b69c6192ed20f789bed906dc6baa31da25acf4f
+Author: George Watson <gigolo@hotmail.co.uk>
+Date:   Sat Feb 25 22:29:44 2023 +0000
+
+    disable macro with name conflict
+
+diff --git a/include/ode/mass.h b/include/ode/mass.h
+index af89cb11..2e06d564 100644
+--- a/include/ode/mass.h
++++ b/include/ode/mass.h
+@@ -84,11 +84,13 @@ ODE_API void dMassAdd (dMass *a, const dMass *b);
+ ODE_API_DEPRECATED ODE_API void dMassSetCappedCylinder(dMass *a, dReal b, int c, dReal d, dReal e);
+ ODE_API_DEPRECATED ODE_API void dMassSetCappedCylinderTotal(dMass *a, dReal b, int c, dReal d, dReal e);
+ 
+-
++#pragma push_macro("I")
++#undef I
+ struct dMass {
+   dReal mass;
+   dVector3 c;
+   dMatrix3 I;
++#pragma pop_macro("I")
+ 
+ #ifdef __cplusplus
+   dMass()
