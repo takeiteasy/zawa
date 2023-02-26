@@ -13,13 +13,17 @@ download "https://raw.githubusercontent.com/thisistherk/fast_obj/master/fast_obj
 download "https://raw.githubusercontent.com/nothings/stb/master/stb_image.h" "tools/"
 
 cd deps/
-git clone https://bitbucket.org/odedevs/ode/
+wget https://bitbucket.org/odedevs/ode/downloads/ode-0.16.3.tar.gz
+tar -xf ode-0.16.3.tar.gz
+mv ode-0.16.3/ ode/
 cd ode/
 patch -p1 < ../../tools/mass.patch
 cd build/
 cmake ..
 make
-cd ../../../
+cd ../../
+rm ode-0.16.3.tar.gz
+cd ../
 
 cd tools/
 
