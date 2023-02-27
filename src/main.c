@@ -12,29 +12,63 @@
 #define MAX_DICE 3
 
 typedef struct {
-    vec3 position, color;
+    vec4 xxxx;
+    vec4 yyyy;
+    vec4 zzzz;
+    vec4 color;
+} DieVertex;
+
+typedef struct {
+    DieVertex vertex;
+    dGeomID geom;
+    dBodyID body;
 } Die;
 
 typedef struct {
     sg_pipeline pip;
     sg_bindings bind;
     Die dice[MAX_DICE];
-    int dice_count;
-    mat4 model;
-} DiceState;
+    int count;
+} Dice;
 
 typedef struct {
     sg_pipeline pip;
     sg_bindings bind;
     mat4 model;
-} FloorState;
+    dGeomID geom;
+    dBodyID body;
+} Floor;
+
+#define MAX_CONTACTS 16
 
 static struct {
     sg_pass_action pass_action;
-    DiceState dice;
-    FloorState floor;
+    Dice dice;
+    Floor floor;
     mat4 view, proj;
+    dWorldID world;
+    dSpaceID space;
+    dJointGroupID contactGroup;
+    dContact contacts[MAX_CONTACTS];
 } state;
+
+static void collision(void* data, dGeomID _a, dGeomID _b) {
+    dBodyID a = dGeomGetBody(_a);
+    dBodyID b = dGeomGetBody(_b);
+    
+    if (a && b && dAreConnectedExcluding(a, b, dJointTypeContact))
+        return;
+    
+    for (int i = 0; i < dCollide(_a, _b, MAX_CONTACTS, &state.contacts[0].geom, sizeof(dContact)); i++) {
+        state.contacts[i].surface.mode = dContactBounce;
+        state.contacts[i].surface.mu = dInfinity;
+        state.contacts[i].surface.mu2 = 0;
+        state.contacts[i].surface.bounce = 0.5;
+        
+        dJointID c = dJointCreateContact(state.world, state.contactGroup, &state.contacts[i]);
+        dJointAttach(c, a, b);
+    }
+}
 
 void init(void) {
     sg_setup(&(sg_desc){
@@ -46,12 +80,9 @@ void init(void) {
                         Vec3(0.f, .8f, 0.f),
                         Vec3(0.f, 1.f, 0.f));
     
-    state.dice.model = Mat4Identity();
-    state.dice.dice_count = 1;
-    for (int i = 0; i < MAX_DICE; i++) {
-        state.dice.dice[i].position = Vec3(0.f, 2.f, 0.f);
-        state.dice.dice[i].color = Vec3(i == 0 ? 1.f : 0.f, i == 1 ? 1.f : 0.f, i == 2 ? 1.f : 0.f);
-    }
+    state.dice.count = 0;
+    for (int i = 0; i < MAX_DICE; i++)
+        state.dice.dice[i].vertex.color = Vec4(i == 0 ? 1.f : 0.f, i == 1 ? 1.f : 0.f, i == 2 ? 1.f : 0.f, 1.f);
         
     state.dice.bind = (sg_bindings) {
         .vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
@@ -59,7 +90,7 @@ void init(void) {
             .label = "dice-vertices"
         }),
         .vertex_buffers[1] = sg_make_buffer(&(sg_buffer_desc) {
-            .size = MAX_DICE * 2 * sizeof(vec3),
+            .size = MAX_DICE * sizeof(DieVertex),
             .usage = SG_USAGE_STREAM,
             .label = "dice-instance-data"
         }),
@@ -68,11 +99,13 @@ void init(void) {
         .layout = {
             .buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE,
             .attrs = {
-                [ATTR_vsDice_pos]      = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
-                [ATTR_vsDice_norm]     = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
+                [ATTR_vsDice_pos] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
+                [ATTR_vsDice_norm] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=0 },
                 [ATTR_vsDice_texcoord] = { .format=SG_VERTEXFORMAT_FLOAT2, .buffer_index=0 },
-                [ATTR_vsDice_inst_pos] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=1 },
-                [ATTR_vsDice_inst_col] = { .format=SG_VERTEXFORMAT_FLOAT3, .buffer_index=1 }
+                [ATTR_vsDice_inst_mat_xxxx] = { .format=SG_VERTEXFORMAT_FLOAT4, .buffer_index=1 },
+                [ATTR_vsDice_inst_mat_yyyy] = { .format=SG_VERTEXFORMAT_FLOAT4, .buffer_index=1 },
+                [ATTR_vsDice_inst_mat_zzzz] = { .format=SG_VERTEXFORMAT_FLOAT4, .buffer_index=1 },
+                [ATTR_vsDice_inst_col] = { .format=SG_VERTEXFORMAT_FLOAT4, .buffer_index=1 },
             }
         },
         .shader = sg_make_shader(dice_shader_desc(sg_query_backend())),
@@ -111,27 +144,49 @@ void init(void) {
     };
     
     dInitODE();
+    state.world = dWorldCreate();
+    state.space = dHashSpaceCreate(0);
+    state.contactGroup = dJointGroupCreate(0);
+    
+    dWorldSetGravity(state.world, 0.0, -9.81, 0.0);
+    dWorldSetLinearDamping(state.world, 0.0001);
+    dWorldSetAngularDamping(state.world, 0.005);
+    dWorldSetMaxAngularSpeed(state.world, 200);
+    dWorldSetContactMaxCorrectingVel(state.world, 0.2);
+    dWorldSetContactSurfaceLayer(state.world, 0.001);
+    dWorldSetCFM(state.world, 1E-15);
+    dWorldSetERP(state.world, 10);
+    
+    state.floor.geom = dCreatePlane(state.space, 0.0, 1.0, 0.0, 0.0);
+    state.floor.body = NULL;
 }
 
 void frame(void) {
     const float t = (float)(sapp_frame_duration() * 60.0);
-    for (int i = 0; i < state.dice.dice_count; i++)
-        state.dice.dice[i].position.y -= .01f * t;
     
-    if (state.dice.dice_count) {
-        float data[state.dice.dice_count * 3 * 2];
-        for (int i = 0, off = 0; i < state.dice.dice_count; i++, off += 6) {
-            memcpy(data + off, &state.dice.dice[i].position, sizeof(vec3));
-            memcpy(data + off + 3, &state.dice.dice[i].color, sizeof(vec3));
+    dSpaceCollide(state.space, 0, collision);
+    dWorldQuickStep(state.world, 1.f / 60.f);
+    dJointGroupEmpty(state.contactGroup);
+    
+    if (state.dice.count) {
+        DieVertex buffer[state.dice.count];
+        for (int i = 0, off = 0; i < state.dice.count; i++, off += 6) {
+            Die *die = &state.dice.dice[i];
+            const dReal *p = dBodyGetPosition(die->body);
+            const dReal *r = dBodyGetRotation(die->body);
+            DieVertex *v = &state.dice.dice[i].vertex;
+            v->xxxx = Vec4(r[0], r[1], r[2],  p[0]);
+            v->yyyy = Vec4(r[4], r[5], r[6],  p[1]);
+            v->zzzz = Vec4(r[8], r[9], r[10], p[2]);
+           memcpy(&buffer[i], v, sizeof(DieVertex));
         }
         sg_update_buffer(state.dice.bind.vertex_buffers[1], &(sg_range){
-            .ptr = data,
-            .size = state.dice.dice_count * sizeof(vec3) * 2
+            .ptr = buffer,
+            .size = state.dice.count * sizeof(DieVertex)
         });
     }
     
     vs_dice_params_t vs_dice_params = {
-        .model = state.dice.model,
         .view = state.view,
         .projection = state.proj
     };
@@ -156,7 +211,7 @@ void frame(void) {
     sg_apply_bindings(&state.dice.bind);
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_dice_params, &SG_RANGE(vs_dice_params));
     sg_apply_uniforms(SG_SHADERSTAGE_FS, SLOT_fs_dice_light, &SG_RANGE(fs_dice_light));
-    sg_draw(0, obj_dice_face_count, state.dice.dice_count);
+    sg_draw(0, obj_dice_face_count, state.dice.count);
     
     vs_floor_params_t vs_floor_params = {
         .model = state.floor.model,
@@ -164,7 +219,7 @@ void frame(void) {
         .projection = state.proj,
         .color = Vec4(0.f, 0.f, 0.f, 1.f)
     };
-    
+
     sg_apply_pipeline(state.floor.pip);
     sg_apply_bindings(&state.floor.bind);
     sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_floor_params, &SG_RANGE(vs_floor_params));
@@ -183,8 +238,17 @@ void input(const sapp_event *e) {
                     sapp_quit();
                     break;
                 case SAPP_KEYCODE_SPACE:
-                    if (state.dice.dice_count < MAX_DICE)
-                        state.dice.dice_count += 1;
+                    if (state.dice.count < MAX_DICE) {
+                        Die *die = &state.dice.dice[state.dice.count++];
+                        die->body = dBodyCreate(state.world);
+                        die->geom = dCreateBox(state.space, .2, .2, .2);
+                        dGeomSetBody(die->geom, die->body);
+                        
+                        dMass mass;
+                        dMassSetBox(&mass, 1, 1, 1, 1);
+                        dBodySetMass(die->body, &mass);
+                        dBodySetPosition(die->body, 0.f, 5.f, 0.f);
+                    }
                     break;
                 default:
                     break;
@@ -199,6 +263,7 @@ void input(const sapp_event *e) {
 }
 
 void cleanup(void) {
+    dCloseODE();
     sg_shutdown();
 }
 

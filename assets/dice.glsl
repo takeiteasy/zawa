@@ -5,11 +5,12 @@
 in vec3 pos;
 in vec3 norm;
 in vec2 texcoord;
-in vec3 inst_pos;
-in vec3 inst_col;
+in vec4 inst_mat_xxxx;
+in vec4 inst_mat_yyyy;
+in vec4 inst_mat_zzzz;
+in vec4 inst_col;
 
 uniform vs_dice_params {
-    mat4 model;
     mat4 view;
     mat4 projection;
 };
@@ -19,12 +20,33 @@ out vec3 Normal;
 out vec2 TexCoord;
 out vec3 Color;
 
+mat4 ConstructMatrix(vec4 x, vec4 y, vec4 z) {
+    mat4 m;
+    m[0][0] = x.x;
+    m[1][0] = x.y;
+    m[2][0] = x.z;
+    m[3][0] = x.w;
+    m[0][1] = y.x;
+    m[1][1] = y.y;
+    m[2][1] = y.z;
+    m[3][1] = y.w;
+    m[0][2] = z.x;
+    m[1][2] = z.y;
+    m[2][2] = z.z;
+    m[3][2] = z.w;
+    m[0][3] = 0.f;
+    m[1][3] = 0.f;
+    m[2][3] = 0.f;
+    m[3][3] = 1.f;
+    return m;
+}
+
 void main() {
-    FragPos = vec3(model * vec4(pos, 1.0));
+    mat4 model = ConstructMatrix(inst_mat_xxxx, inst_mat_yyyy, inst_mat_zzzz);
     Normal = mat3(transpose(inverse(model))) * norm;
-    gl_Position = projection * view * vec4(FragPos + inst_pos, 1.0);
+    gl_Position = projection * view * model * vec4(pos, 1.0);
     TexCoord = vec2(texcoord.x, -texcoord.y);
-    Color = inst_col;
+    Color = inst_col.xyz;
 }
 @end
 
