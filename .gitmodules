@@ -1,3 +1,6 @@
 [submodule "deps/cwcGL"]
 	path = deps/cwcGL
 	url = git@github.com:takeiteasy/cwcGL.git
+[submodule "deps/glm"]
+	path = deps/glm
+	url = https://github.com/g-truc/glm

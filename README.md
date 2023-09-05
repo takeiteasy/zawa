@@ -1,15 +1,11 @@
-# chinchiro
+# zawa
 
-A 3D dice game based on *Underground Chinchiro* featuring in Kaiji S2. Remake of the first game I made.
+A 3D dice game based on *Underground Chinchiro* featuring in Kaiji S2. Remake of the [first game I made](https://gist.github.com/takeiteasy/1183ea75e1246870ed5192d274e73f11). **WIP**
 
 ## Dependencies
 
-- [floooh/sokol](https://github.com/floooh/sokol) (zlib/libpng)
-    - sokol_gfx.h
-    - sokol_app.h
-    - sokol_glue.h
-    - sokol_audio.h
 - [odedevs/ode](https://bitbucket.org/odedevs/ode/src/master/) (GNU-LGPL-v2.1/BSD-3-clause)
+- [g-truc/glm](https://github.com/g-truc/glm) (MIT)
 
 ## License
 ```
