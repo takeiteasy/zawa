@@ -1,48 +1,32 @@
 ifeq ($(OS),Windows_NT)
 	PROG_EXT=.exe
-	CFLAGS=-O2 -DSOKOL_D3D11 -lkernel32 -luser32 -lshell32 -ldxgi -ld3d11 -lole32 -lgdi32
+	LIB_EXT=dll
+	DEPS=-lkernel32 -luser32 -lshell32 -lgdi32 -lopengl32
 	ARCH=win32
-	SHDC_FLAGS=hlsl5
 else
 	UNAME:=$(shell uname -s)
 	PROG_EXT=
 	ifeq ($(UNAME),Darwin)
-		CFLAGS=-x objective-c -DSOKOL_METAL -fobjc-arc -framework Metal -framework Cocoa -framework MetalKit -framework Quartz -framework AudioToolbox
+		DEPS=-x objective-c++ -fobjc-arc -framework Cocoa -framework OpenGL
 		ARCH:=$(shell uname -m)
+		LIB_EXT=dylib
 		ifeq ($(ARCH),arm64)
 			ARCH=osx_arm64
 		else
 			ARCH=osx
 		endif
-		SHDC_FLAGS=metal_macos
 	else ifeq ($(UNAME),Linux)
-		CFLAGS=-DSOKOL_GLCORE33 -pthread -lGL -ldl -lm -lX11 -lasound -lXi -lXcursor
+		DEPS=-lGL -ldl -lm -lX11 -lXi -lXcursor
 		ARCH=linux
-		SHDC_FLAGS=glsl330
+		LIB_EXT=so
 	else
 		$(error OS not supported by this Makefile)
 	endif
 endif
-CC=clang
-SOURCE=$(wildcard src/*.c)
-EXE=build/ceelo_$(ARCH)$(PROG_EXT)
-ARCH_PATH=./tools/bin/$(ARCH)
 
-SHDC_PATH=$(ARCH_PATH)/sokol-shdc$(PROG_EXT)
-SHADERS=$(wildcard assets/*.glsl)
-SHADER_OUTS=$(patsubst %,%.h,$(SHADERS))
+SOURCE=$(wildcard src/*.cpp)
 
-all: app
-
-.SECONDEXPANSION:
-SHADER=$(patsubst %.h,%,$@)
-SHADER_OUT=$@
-%.glsl.h: $(SHADERS)
-	$(SHDC_PATH) -i $(SHADER) -o $(SHADER_OUT) -l $(SHDC_FLAGS)
-	mv $(SHADER_OUT) build/
-
-shaders: $(SHADER_OUTS)
-
+ARCH_PATH=tools/bin/$(ARCH)
 OBJ_PATH=$(ARCH_PATH)/objheader$(PROG_EXT)
 OBJS=$(wildcard assets/*.obj)
 OBJS_OUT=$(patsubst %,%.h,$(OBJS))
@@ -69,12 +53,15 @@ IMG_OUT=$@
 
 images: $(IMGS_OUT)
 
-assets: shaders models images
+assets: models images
 
-app: assets
-	$(CC) -Ibuild -Ideps -Ideps/ode/include -Ideps/ode/build/include -fenable-matrix $(CFLAGS) -Ldeps/ode/build -lode $(SOURCE) -o $(EXE)
+cwcgl:
+	$(CC) -shared -fpic -Ideps/cwcGL/src deps/cwcGL/src/cwcgl.c -framework Cocoa -o build/libcwcGL_$(ARCH).$(LIB_EXT)
 
-run: $(EXE)
-	./$(EXE)
+app: qu3e cwcgl assets
+	$(CC) -std=c++11 -lstdc++ -Ideps/ode/include -Ideps/ode/build/include -Ideps/cwcGL/src -Ldeps/ode/build -lode -Lbuild -lcwcGL_$(ARCH) $(DEPS) $(SOURCE) -o build/ceelo_$(ARCH)$(PROG_EXT)
 
-.PHONY: all app shaders models run assets images
+all: app
+default: app
+
+.PHONY: default all app qu3e models assets images

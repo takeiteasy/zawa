@@ -1,4 +1,4 @@
-name: ceelo
+name: zawa
 
 options:
   bundleIdPrefix: io.github.takeiteasy
@@ -7,14 +7,26 @@ options:
     macOS: "12.0"
 
 settings:
+  CLANG_CXX_LANGUAGE_STANDARD: c++11
+  CLANG_CXX_LIBRARY: libc++
   GCC_C_LANGUAGE_STANDARD: c11
+  CLANG_WARN_DOCUMENTATION_COMMENTS: false
 
 targets:
-  ceelo:
-    type: application
+  cwcGL:
+    type: library.dynamic
     platform: macOS
-    info:
-      path: Info.plist
+    sources:
+        - path: deps/cwcGL/src
+          excludes:
+            - "backends/"
+    settings:
+        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/deps/cwcGL/src]
+    dependencies:
+        - sdk: Cocoa.framework
+  zawa:
+    type: tool
+    platform: macOS
     sources:
         - path: assets/
           type: folder
@@ -24,13 +36,17 @@ targets:
           type: folder
         - path: build/
           type: folder
+        - path: Makefile
+          type: folder
+        - path: project.yml
+          type: folder
+        - path: README.md
+          type: folder
         - path: src/
     dependencies:
-        - sdk: Cocoa.framework
-        - sdk: Metal.framework
-        - sdk: MetalKit.framework
-        - sdk: Quartz.framework
-        - sdk: AudioToolbox.framework
+        - target: cwcGL
+        - sdk: deps/ode/build/libode.dylib
     settings:
-        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/deps, $(PROJECT_DIR)/build, $(PROJECT_DIR)/deps/ode/include, $(PROJECT_DIR)/deps/ode/build/include]
-        OTHER_CFLAGS: [-fenable-matrix, "-x objective-c", -DSOKOL_METAL, -fobjc-arc]
+        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/deps, $(PROJECT_DIR)/deps/ode/include, $(PROJECT_DIR)/deps/ode/build/include]
+        LIBRARY_SEARCH_PATHS: [$(PROJECT_DIR)/deps/ode/build]
+        OTHER_CFLAGS: ["-x objective-c++", -fobjc-arc]

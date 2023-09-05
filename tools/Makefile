@@ -18,11 +18,6 @@ else
 	endif
 endif
 
-CC:=clang
-LDFLAGS:=
-CFLAGS_INC:=-Ideps -I../deps
-CFLAGS:=-g -Wall $(CFLAGS_INC)
-
 SRCS := $(wildcard src/*.c)
 PRGS := $(patsubst %.c,%,$(SRCS))
 PRG_SUFFIX=.exe
@@ -36,6 +31,8 @@ endif
 
 default: $(BINS)
 
+CFLAGS=-Ideps
+
 .SECONDEXPANSION:
 OBJ = $(patsubst %$(PRG_SUFFIX),%.o,$@)
 ifeq ($(PRG_SUFFIX_FLAG),0)
@@ -44,7 +41,7 @@ else
 	BIN = $@
 endif
 %$(PRG_SUFFIX): $(OBJS)
-	$(CC) $(OBJ) $(LDFLAGS) -o $(BIN)
+	$(CC) $(OBJ) -o $(BIN)
 	mv $(BIN) bin/$(BIN_ARCH)
 
 .PHONY: default
