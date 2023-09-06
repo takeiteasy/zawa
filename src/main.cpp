@@ -7,6 +7,10 @@
 #include "hand.obj.h"
 #include "plane.obj.h"
 #include "hand.png.h"
+#include "default.vert.glsl.h"
+#include "dice.frag.glsl.h"
+#include "hand.frag.glsl.h"
+#include "plane.frag.glsl.h"
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -94,26 +98,6 @@ do {                                                       \
     glBindVertexArray(0);                                  \
 } while(0);
 
-static char* ReadFile(const char* path, size_t *size) {
-    FILE *file = fopen(path, "rb");
-    if (!file) {
-        fprintf(stderr, "fopen \"%s\" failed: %d %s\n", path, errno, strerror(errno));
-        return NULL;
-    }
-    
-    fseek(file, 0, SEEK_END);
-    size_t length = ftell(file);
-    rewind(file);
-    
-    char *data = (char*)calloc(length + 1, sizeof(char));
-    fread(data, 1, length, file);
-    fclose(file);
-    
-    if (size)
-        *size = length;
-    return data;
-}
-
 static int CheckShader(GLuint shader, GLenum pname, void(*func)(GLuint, GLenum, GLint*)) {
     GLint status;
     func(shader, pname, &status);
@@ -195,17 +179,12 @@ do {                                                                            
     state.proj = glm::perspective(glm::radians(45.f), 640.f / 480.f, .1f, 1000.f);
     state.view = glm::lookAt(state.cameraPosition, state.cameraTarget, glm::vec3(0.f, 1.f, 0.f));
     
-    // TODO: Build shaders into source later
-    char *vertexSource = ReadFile("assets/default.vert.glsl", NULL);
-    GLuint vertex = MakeShader(GL_VERTEX_SHADER, vertexSource);
-    free(vertexSource);
-#define X(NAME)                                                      \
-do {                                                                 \
-    char *fragSource = ReadFile("assets/" #NAME ".frag.glsl", NULL); \
-    GLuint frag = MakeShader(GL_FRAGMENT_SHADER, fragSource);        \
-    free(fragSource);                                                \
-    state.NAME##Shader = MakeProgram(vertex, frag);                  \
-    glDeleteShader(frag);                                            \
+    GLuint vertex = MakeShader(GL_VERTEX_SHADER, img_default_vert_data);
+#define X(NAME)                                                           \
+do {                                                                      \
+    GLuint frag = MakeShader(GL_FRAGMENT_SHADER, img_##NAME##_frag_data); \
+    state.NAME##Shader = MakeProgram(vertex, frag);                       \
+    glDeleteShader(frag);                                                 \
 } while(0);
     ASSETS
 #undef X

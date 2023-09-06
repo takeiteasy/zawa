@@ -1,4 +1,4 @@
-/* objheader.h -- https://github.com/takeiteasy/ceelo
+/* objheader.c -- https://github.com/takeiteasy/zawa
  
  The MIT License (MIT)
 

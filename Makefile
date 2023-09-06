@@ -29,39 +29,52 @@ SOURCE=$(wildcard src/*.cpp)
 ARCH_PATH=tools/bin/$(ARCH)
 OBJ_PATH=$(ARCH_PATH)/objheader$(PROG_EXT)
 OBJS=$(wildcard assets/*.obj)
-OBJS_OUT=$(patsubst %,%.h,$(OBJS))
+OBJS_OUT=$(patsubst assets/%,build/%.h,$(OBJS))
 
 .SECONDEXPANSION:
-OBJ=$(patsubst %.h,%,$@)
+OBJ=$(patsubst build/%.h,assets/%,$@)
 OBJ_OUT=$@
 %.obj.h: $(OBJS)
 	$(OBJ_PATH) $(OBJ) > $(OBJ_OUT)
-	mv $(OBJ_OUT) build/
 
 models: $(OBJS_OUT)
 
 IMG_PATH=$(ARCH_PATH)/imgheader$(PROG_EXT)
 IMGS=$(wildcard assets/*.png)
-IMGS_OUT=$(patsubst %,%.h,$(IMGS))
+IMGS_OUT=$(patsubst assets/%,build/%.h,$(IMGS))
 
 .SECONDEXPANSION:
-IMG=$(patsubst %.h,%,$@)
+IMG=$(patsubst build/%.h,assets/%,$@)
 IMG_OUT=$@
 %.png.h: $(IMGS)
 	$(IMG_PATH) $(IMG) > $(IMG_OUT)
-	mv $(IMG_OUT) build/
 
 images: $(IMGS_OUT)
 
-assets: models images
+SHDR_PATH=$(ARCH_PATH)/shdrheader$(PROG_EXT)
+SHDRS=$(wildcard assets/*.glsl)
+SHDRS_OUT=$(patsubst assets/%,build/%.h,$(SHDRS))
+
+.SECONDEXPANSION:
+SHDR=$(patsubst build/%.h,assets/%,$@)
+SHDR_OUT=$@
+%.glsl.h: $(IMGS)
+	$(SHDR_PATH) $(SHDR) > $(SHDR_OUT)
+
+shaders: $(SHDRS_OUT)
+
+assets: models images shaders
 
 cwcgl:
 	$(CC) -shared -fpic -DCWCGL_VERSION=3020 -Ideps/cwcGL/src deps/cwcGL/src/cwcgl.c -framework Cocoa -o build/libcwcGL_$(ARCH).$(LIB_EXT)
 
-app: qu3e cwcgl assets
+app: cwcgl assets
 	$(CC) -std=c++11 -lstdc++ -Ideps/ -Ibuild/ -Ideps/glm -Ideps/ode/include -Ideps/ode/build/include -Ideps/cwcGL/src -Ldeps/ode/build -lode -Lbuild -lcwcGL_$(ARCH) $(DEPS) $(SOURCE) -o build/ceelo_$(ARCH)$(PROG_EXT)
+
+clean:
+	rm build/*
 
 all: app
 default: app
 
-.PHONY: default all app qu3e models assets images
+.PHONY: default all app shaders models assets images

@@ -29,7 +29,7 @@ else
 	OUTS = $(BINS)
 endif
 
-default: $(BINS)
+default: $(BINS) clean
 
 CFLAGS=-Ideps
 
@@ -44,4 +44,7 @@ endif
 	$(CC) $(OBJ) -o $(BIN)
 	mv $(BIN) bin/$(BIN_ARCH)
 
-.PHONY: default
+clean:
+	rm src/*.o
+
+.PHONY: default clean
