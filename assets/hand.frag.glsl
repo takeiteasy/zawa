@@ -8,5 +8,5 @@ in vec2 TexCoords;
 uniform sampler2D iChannel0;
 
 void main() {
-  FragColor = vec4(texture(iChannel0, TexCoords).rgb, 1.f);
+    FragColor = vec4(texture(iChannel0, TexCoords).rgb, 1.f);
 }

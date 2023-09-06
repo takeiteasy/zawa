@@ -14,16 +14,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#if defined(__APPLE__)
-#include <mach/mach_time.h>
-#define PLATFORM_MAC
-#elif defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
-#define PLATFORM_WINDOWS
-#else
-#include <time.h>
-#define PLATFORM_LINUX // probably
-#endif
 
 #if !defined(MAX_CONTACTS)
 #define MAX_CONTACTS 8
@@ -177,24 +167,6 @@ static GLuint MakeTexture(const unsigned char *data, int width, int height) {
     return id;
 }
 
-static uint64_t TimerTick(void) {
-#if defined(PLATFORM_MAC)
-    return mach_absolute_time();
-#elif defined(PLATFORM_WINDOWS)
-    LARGE_INTEGER counter;
-    if (!QueryPerformanceCounter(&counter))
-        return timeGetTime();
-    return counter.QuadPart;
-#else
-    struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    uint64_t ticks = now.tv_sec;
-    ticks *= 1000000000L;
-    ticks += now.tv_nsec;
-    return ticks;
-#endif
-}
-
 static void PushLight(GLuint shader, Light *light) {
     glUniform3f(glGetUniformLocation(shader, "light.position"), light->position.x, light->position.y, light->position.z);
     glUniform3f(glGetUniformLocation(shader, "light.direction"), light->direction.x, light->direction.y, light->direction.z);
@@ -259,12 +231,15 @@ do {                                                                            
     state.proj = glm::perspective(glm::radians(45.f), 640.f / 480.f, .1f, 1000.f);
     state.view = glm::lookAt(state.cameraPosition, state.cameraTarget, glm::vec3(0.f, 1.f, 0.f));
     
-    GLuint vertex = MakeShader(GL_VERTEX_SHADER, img_default_vert_data);
-#define X(NAME)                                                           \
-do {                                                                      \
-    GLuint frag = MakeShader(GL_FRAGMENT_SHADER, img_##NAME##_frag_data); \
-    state.NAME##Shader = MakeProgram(vertex, frag);                       \
-    glDeleteShader(frag);                                                 \
+    GLuint vertex = MakeShader(GL_VERTEX_SHADER, shdr_default_vert_data);
+    assert(vertex != -1);
+#define X(NAME)                                                            \
+do {                                                                       \
+    GLuint frag = MakeShader(GL_FRAGMENT_SHADER, shdr_##NAME##_frag_data); \
+    assert(frag != -1);                                                    \
+    state.NAME##Shader = MakeProgram(vertex, frag);                        \
+    assert(state.NAME##Shader != -1);                                      \
+    glDeleteShader(frag);                                                  \
 } while(0);
     ASSETS
 #undef X
@@ -288,18 +263,10 @@ do {                                                                      \
     floor.world = glm::scale(glm::mat4(1.f), glm::vec3(5.f, 5.f, 5.f));
     floor.model = &state.planeModel;
       
-    uint64_t accumulator = 0, oldTime = TimerTick();
     while (glPollWindow()) {
-        float deltaTime = TimerTick() - oldTime;
-        oldTime = TimerTick();
-        accumulator += deltaTime;
-        
-        while(accumulator > TIMESTEP){
-            dSpaceCollide(state.space, 0, collide);
-            dWorldQuickStep(state.world, TIMESTEP);
-            dJointGroupEmpty(state.contactGroup);
-            accumulator -= TIMESTEP;
-        }
+        dSpaceCollide(state.space, 0, collide);
+        dWorldQuickStep(state.world, TIMESTEP);
+        dJointGroupEmpty(state.contactGroup);
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         

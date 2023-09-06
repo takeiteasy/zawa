@@ -82,12 +82,27 @@ int main(int argc, const char *argv[]) {
            "#define __GLSL__%s__H__\n",
            outName, outName);
     
-    printf("static const char* img_%s_data =\n", outName);
+    printf("static const char* shdr_%s_data =\n", outName);
     char *token = strtok(data, NEWLINE);
+    int firstLine = 1;
     while (token) {
-        printf("\"%s\"", token);
+        int ok = 0;
+        for (int i = 0; i < strlen(token); i++)
+            if (token[i] != ' ') {
+                ok = 1;
+                break;
+            }
+        if (!ok)
+            goto NEXT;
+        printf("\"%s%s\"", token, firstLine ? "\\n" : "");
+        if (firstLine) {
+            firstLine = 0;
+            assert(token[0] == '#');
+        }
+    NEXT:
         token = strtok(NULL, NEWLINE);
-        printf("%s", token ? "\n" : ";\n");
+        if (ok)
+            printf("%s", token ? "\n" : ";\n");
     }
     free(data);
     
