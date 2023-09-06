@@ -14,9 +14,23 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#if defined(__APPLE__)
+#include <mach/mach_time.h>
+#define PLATFORM_MAC
+#elif defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#define PLATFORM_WINDOWS
+#else
+#include <time.h>
+#define PLATFORM_LINUX // probably
+#endif
 
 #if !defined(MAX_CONTACTS)
 #define MAX_CONTACTS 8
+#endif
+
+#if !defined(TIMESTEP)
+#define TIMESTEP (1.0/60.0)
 #endif
 
 #define ASSETS \
@@ -138,6 +152,24 @@ static GLuint MakeTexture(const unsigned char *data, int width, int height) {
     return id;
 }
 
+static uint64_t TimerTick(void) {
+#if defined(PLATFORM_MAC)
+    return mach_absolute_time();
+#elif defined(PLATFORM_WINDOWS)
+    LARGE_INTEGER counter;
+    if (!QueryPerformanceCounter(&counter))
+        return timeGetTime();
+    return counter.QuadPart;
+#else
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    uint64_t ticks = now.tv_sec;
+    ticks *= 1000000000L;
+    ticks += now.tv_nsec;
+    return ticks;
+#endif
+}
+
 int main(int argc, const char *argv[]) {
     if (!glWindow(640, 480, "glWindow", glResizable))
         return 1;
@@ -191,10 +223,18 @@ do {                                                                      \
     glDeleteShader(vertex);
     state.handTexture = MakeTexture(img_hand_data, img_hand_width, img_hand_height);
 
+    uint64_t accumulator = 0, oldTime = TimerTick();
     while (glPollWindow()) {
-        dSpaceCollide(state.space, 0, collide);
-        dWorldQuickStep(state.world, 1.f / 60.f);
-        dJointGroupEmpty(state.contactGroup);
+        float deltaTime = TimerTick() - oldTime;
+        oldTime = TimerTick();
+        accumulator += deltaTime;
+        
+        while(accumulator > TIMESTEP){
+            dSpaceCollide(state.space, 0, collide);
+            dWorldQuickStep(state.world, TIMESTEP);
+            dJointGroupEmpty(state.contactGroup);
+            accumulator -= TIMESTEP;
+        }
         
         glFlushWindow();
     }
