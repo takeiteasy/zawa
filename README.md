@@ -2,6 +2,11 @@
 
 A 3D dice game based on *Underground Chinchiro* featuring in Kaiji S2. Remake of the [first game I made](https://gist.github.com/takeiteasy/1183ea75e1246870ed5192d274e73f11). **WIP**
 
+<p align="center">
+  <img width="501" height="409" src="https://raw.githubusercontent.com/takeiteasy/zawa/master/screenshot.png">
+</p>
+
+
 ## Dependencies
 
 - [odedevs/ode](https://bitbucket.org/odedevs/ode/src/master/) (GNU-LGPL-v2.1/BSD-3-clause)
