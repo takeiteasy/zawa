@@ -23,7 +23,7 @@ in vec2 TexCoords;
 
 uniform vec3 viewPos;
 uniform Light light;
-uniform vec3 plane_color;
+uniform vec3 planeColor;
 
 vec2 rotate2D(vec2 _st, float _angle){
     _st -= 0.5;
@@ -49,7 +49,7 @@ float box(vec2 _st, vec2 _size, float _smoothEdges){
 void main() {
     vec3 tex = vec3(box(rotate2D(tile(TexCoords.st + fract(gl_FragCoord.xy * vec2(512.f)), 24.), 3.14159265358979323846 * 0.25), vec2(0.7), 0.01));
     if (tex.x != 1 && tex.y != 1 && tex.z != 1)
-        tex = plane_color;
+        tex = planeColor;
     
     vec3 lightDir = normalize(light.position - FragPos);
     float theta = dot(lightDir, normalize(-light.direction));

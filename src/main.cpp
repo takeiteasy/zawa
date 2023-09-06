@@ -79,6 +79,7 @@ static struct {
 #undef X
     GLuint handTexture;
     
+    glm::vec3 planeColor;
     Light spotlight;
 } state;
 
@@ -200,6 +201,12 @@ int main(int argc, const char *argv[]) {
     if (!InitOpenGL())
         return 1;
     
+    glViewport(0, 0, 640, 480);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glCullFace(GL_BACK);
+    
 #define X(NAME)                                                                                                   \
 do {                                                                                                              \
     glGenVertexArrays(1, &state.NAME##Model.id);                                                                  \
@@ -215,7 +222,7 @@ do {                                                                            
     glEnableVertexAttribArray(2);                                                                                 \
     glBindVertexArray(0);                                                                                         \
     glBindBuffer(GL_ARRAY_BUFFER, 0);                                                                             \
-    state.NAME##Model.size = obj_##NAME##_data_size;                                                              \
+    state.NAME##Model.size = obj_##NAME##_face_count;                                                             \
 } while(0);
     ASSETS
 #undef X
@@ -246,6 +253,7 @@ do {                                                                       \
     glDeleteShader(vertex);
     state.handTexture = MakeTexture(img_hand_data, img_hand_width, img_hand_height);
     
+    state.planeColor            = glm::vec3(1.f, 0.f, 0.f);
     state.spotlight.position    = glm::vec3(0.f, 7.f, 0.f);
     state.spotlight.direction   = glm::vec3(0.f, -1.f, 0.f);
     state.spotlight.cutOff      = cosf(glm::radians(12.5f));
@@ -260,7 +268,7 @@ do {                                                                       \
     GameObject floor;
     floor.rigidBody.geom = dCreatePlane(state.space, 0, 1, 0, 0);
     floor.rigidBody.body = NULL;
-    floor.world = glm::scale(glm::mat4(1.f), glm::vec3(5.f, 5.f, 5.f));
+    floor.world = glm::mat4(1.f);
     floor.model = &state.planeModel;
       
     while (glPollWindow()) {
@@ -274,6 +282,8 @@ do {                                                                       \
         glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "projection"), 1, GL_FALSE, &state.proj[0][0]);
         glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "view"), 1, GL_FALSE, &state.view[0][0]);
         glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "model"), 1, GL_FALSE, &floor.world[0][0]);
+        glUniform3f(glGetUniformLocation(state.planeShader, "viewPos"), state.cameraPosition.x, state.cameraPosition.y, state.cameraPosition.z);
+        glUniform3f(glGetUniformLocation(state.planeShader, "planeColor"), state.planeColor.x, state.planeColor.y, state.planeColor.z);
         PushLight(state.planeShader, &state.spotlight);
         RenderGameObject(state.planeShader, &floor);
         
