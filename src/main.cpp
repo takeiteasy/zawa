@@ -43,6 +43,36 @@ typedef struct {
     GLuint id;
 } Model;
 
+typedef struct {
+    dGeomID geom;
+    dBodyID body;
+} RigidBody;
+
+typedef struct {
+    glm::vec3 specular;
+    float shininess;
+} Material;
+
+typedef struct {
+    RigidBody rigidBody;
+    Model *model;
+    Material material;
+    glm::mat4 world;
+} GameObject;
+
+typedef struct {
+    glm::vec3 position;
+    glm::vec3 direction;
+    float cutOff;
+    float outerCutOff;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float constant;
+    float linear;
+    float quadratic;
+} Light;
+
 static struct {
     dWorldID world;
     dSpaceID space;
@@ -58,6 +88,8 @@ static struct {
     ASSETS
 #undef X
     GLuint handTexture;
+    
+    Light spotlight;
 } state;
 
 // Window event callbacks, I think the names are self-explanatory
@@ -104,13 +136,6 @@ static void collide(void* data, dGeomID o1, dGeomID o2) {
         dJointAttach(c, b1, b2);
     }
 }
-
-#define RenderModel(NAME)                                  \
-do {                                                       \
-    glBindVertexArray(state.NAME##Model.id);               \
-    glDrawArrays(GL_TRIANGLES, 0, state.NAME##Model.size); \
-    glBindVertexArray(0);                                  \
-} while(0);
 
 static int CheckShader(GLuint shader, GLenum pname, void(*func)(GLuint, GLenum, GLint*)) {
     GLint status;
@@ -170,6 +195,29 @@ static uint64_t TimerTick(void) {
 #endif
 }
 
+static void PushLight(GLuint shader, Light *light) {
+    glUniform3f(glGetUniformLocation(shader, "light.position"), light->position.x, light->position.y, light->position.z);
+    glUniform3f(glGetUniformLocation(shader, "light.direction"), light->direction.x, light->direction.y, light->direction.z);
+    glUniform3f(glGetUniformLocation(shader, "light.ambient"), light->ambient.x, light->ambient.y, light->ambient.z);
+    glUniform3f(glGetUniformLocation(shader, "light.diffuse"), light->diffuse.x, light->diffuse.y, light->diffuse.z);
+    glUniform3f(glGetUniformLocation(shader, "light.specular"), light->specular.x, light->specular.y, light->specular.z);
+    glUniform1f(glGetUniformLocation(shader, "light.cutOff"), light->cutOff);
+    glUniform1f(glGetUniformLocation(shader, "light.outerCutOff"), light->outerCutOff);
+    glUniform1f(glGetUniformLocation(shader, "light.constant"), light->constant);
+    glUniform1f(glGetUniformLocation(shader, "light.linear"), light->linear);
+    glUniform1f(glGetUniformLocation(shader, "light.quadratic"), light->quadratic);
+}
+
+static void RenderGameObject(GLuint shader, GameObject *obj) {
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &obj->world[0][0]);
+    glUniform1i(glGetUniformLocation(shader, "material.diffuse"), 0);
+    glUniform3f(glGetUniformLocation(shader, "material.specular"), obj->material.specular.x, obj->material.specular.y, obj->material.specular.z);
+    glUniform1f(glGetUniformLocation(shader, "material.shininess"), obj->material.shininess);
+    glBindVertexArray(obj->model->id);
+    glDrawArrays(GL_TRIANGLES, 0, obj->model->size);
+    glBindVertexArray(0);
+}
+
 int main(int argc, const char *argv[]) {
     if (!glWindow(640, 480, "glWindow", glResizable))
         return 1;
@@ -222,7 +270,24 @@ do {                                                                      \
 #undef X
     glDeleteShader(vertex);
     state.handTexture = MakeTexture(img_hand_data, img_hand_width, img_hand_height);
-
+    
+    state.spotlight.position    = glm::vec3(0.f, 7.f, 0.f);
+    state.spotlight.direction   = glm::vec3(0.f, -1.f, 0.f);
+    state.spotlight.cutOff      = cosf(glm::radians(12.5f));
+    state.spotlight.outerCutOff = cosf(glm::radians(17.5f));
+    state.spotlight.ambient     = glm::vec3(.5f, .5f, .5f);
+    state.spotlight.diffuse     = glm::vec3(1.f, 1.f, 1.f);
+    state.spotlight.specular    = glm::vec3(1.f, 1.f, 1.f);
+    state.spotlight.constant    = 1.f;
+    state.spotlight.linear      = .09f;
+    state.spotlight.quadratic   = .032f;
+    
+    GameObject floor;
+    floor.rigidBody.geom = dCreatePlane(state.space, 0, 1, 0, 0);
+    floor.rigidBody.body = NULL;
+    floor.world = glm::scale(glm::mat4(1.f), glm::vec3(5.f, 5.f, 5.f));
+    floor.model = &state.planeModel;
+      
     uint64_t accumulator = 0, oldTime = TimerTick();
     while (glPollWindow()) {
         float deltaTime = TimerTick() - oldTime;
@@ -236,6 +301,16 @@ do {                                                                      \
             accumulator -= TIMESTEP;
         }
         
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        glUseProgram(state.planeShader);
+        glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "projection"), 1, GL_FALSE, &state.proj[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "view"), 1, GL_FALSE, &state.view[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "model"), 1, GL_FALSE, &floor.world[0][0]);
+        PushLight(state.planeShader, &state.spotlight);
+        RenderGameObject(state.planeShader, &floor);
+        
+        glUseProgram(0);
         glFlushWindow();
     }
     
