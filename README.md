@@ -11,6 +11,10 @@ A 3D dice game based on *Underground Chinchiro* featuring in Kaiji S2. Remake of
 
 - [odedevs/ode](https://bitbucket.org/odedevs/ode/src/master/) (GNU-LGPL-v2.1/BSD-3-clause)
 - [g-truc/glm](https://github.com/g-truc/glm) (MIT)
+- [nothings/stb](https://github.com/nothings/stb/tree/master) (MIT/Public Domain)
+    - tools/deps/stb_image.h
+- [thisistherk/fast_obj](https://github.com/thisistherk/fast_obj) (MIT)
+    - tools/deps/fast_obj.h
 
 ## License
 ```
