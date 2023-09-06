@@ -13,17 +13,6 @@ settings:
   CLANG_WARN_DOCUMENTATION_COMMENTS: false
 
 targets:
-  cwcGL:
-    type: library.dynamic
-    platform: macOS
-    sources:
-        - path: deps/cwcGL/src
-          excludes:
-            - "backends/"
-    settings:
-        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/deps/cwcGL/src]
-    dependencies:
-        - sdk: Cocoa.framework
   zawa:
     type: tool
     platform: macOS
@@ -47,6 +36,19 @@ targets:
         - target: cwcGL
         - sdk: deps/ode/build/libode.dylib
     settings:
-        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/deps/glm, $(PROJECT_DIR)/deps/ode/include, $(PROJECT_DIR)/deps/ode/build/include]
+        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/build, $(PROJECT_DIR)/deps, $(PROJECT_DIR)/deps/glm, $(PROJECT_DIR)/deps/ode/include, $(PROJECT_DIR)/deps/ode/build/include]
         LIBRARY_SEARCH_PATHS: [$(PROJECT_DIR)/deps/ode/build]
         OTHER_CFLAGS: ["-x objective-c++", -fobjc-arc]
+  cwcGL:
+    type: library.dynamic
+    platform: macOS
+    sources:
+        - path: deps/cwcGL/src
+          excludes:
+            - "backends/"
+    settings:
+        HEADER_SEARCH_PATHS: [$(PROJECT_DIR)/deps/cwcGL/src]
+    dependencies:
+        - sdk: Cocoa.framework
+    settings:
+        OTHER_CFLAGS: ["-DCWCGL_VERSION=3020"]

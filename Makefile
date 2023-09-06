@@ -56,10 +56,10 @@ images: $(IMGS_OUT)
 assets: models images
 
 cwcgl:
-	$(CC) -shared -fpic -Ideps/cwcGL/src deps/cwcGL/src/cwcgl.c -framework Cocoa -o build/libcwcGL_$(ARCH).$(LIB_EXT)
+	$(CC) -shared -fpic -DCWCGL_VERSION=3020 -Ideps/cwcGL/src deps/cwcGL/src/cwcgl.c -framework Cocoa -o build/libcwcGL_$(ARCH).$(LIB_EXT)
 
 app: qu3e cwcgl assets
-	$(CC) -std=c++11 -lstdc++ -Ideps/glm -Ideps/ode/include -Ideps/ode/build/include -Ideps/cwcGL/src -Ldeps/ode/build -lode -Lbuild -lcwcGL_$(ARCH) $(DEPS) $(SOURCE) -o build/ceelo_$(ARCH)$(PROG_EXT)
+	$(CC) -std=c++11 -lstdc++ -Ideps/ -Ibuild/ -Ideps/glm -Ideps/ode/include -Ideps/ode/build/include -Ideps/cwcGL/src -Ldeps/ode/build -lode -Lbuild -lcwcGL_$(ARCH) $(DEPS) $(SOURCE) -o build/ceelo_$(ARCH)$(PROG_EXT)
 
 all: app
 default: app

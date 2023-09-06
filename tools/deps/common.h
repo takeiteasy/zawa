@@ -35,13 +35,13 @@
 #include <unistd.h>
 #endif
 
-#define BAIL(X, MSG, ...) \
-    do {             \
-        if (!(X)) {   \
+#define BAIL(X, MSG, ...)                                     \
+    do {                                                      \
+        if (!(X)) {                                           \
             fprintf(stderr, "ERROR: " MSG "\n", __VA_ARGS__); \
-            usage(); \
-        } \
-        assert((X)); \
+            usage();                                          \
+        }                                                     \
+        assert((X));                                          \
     } while(0)
 
 static const char* FileExt(const char *path) {
