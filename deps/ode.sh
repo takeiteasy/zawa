@@ -4,7 +4,7 @@ tar -xf ode-0.16.3.tar.gz
 mv ode-0.16.3/ ode/
 cd ode/
 if [ "$(uname -s)" == "Darwin" ]; then
-    patch -p1 < ../../tools/mass.patch
+    patch -p1 < ../../deps/mass.patch
 fi
 cd build/
 cmake ..

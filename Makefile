@@ -1,11 +1,13 @@
 ifeq ($(OS),Windows_NT)
 	PROG_EXT=.exe
+	PRG_SUFFIX_FLAG=1
 	LIB_EXT=dll
 	DEPS=-lkernel32 -luser32 -lshell32 -lgdi32 -lopengl32
 	ARCH=win32
 else
 	UNAME:=$(shell uname -s)
 	PROG_EXT=
+	PRG_SUFFIX_FLAG=0
 	ifeq ($(UNAME),Darwin)
 		DEPS=-x objective-c++ -fobjc-arc -framework Cocoa -framework OpenGL
 		ARCH:=$(shell uname -m)
@@ -27,19 +29,19 @@ endif
 SOURCE=$(wildcard src/*.cpp)
 
 ARCH_PATH=tools/bin/$(ARCH)
-OBJ_PATH=$(ARCH_PATH)/objheader$(PROG_EXT)
-OBJS=$(wildcard assets/*.obj)
-OBJS_OUT=$(patsubst assets/%,build/%.h,$(OBJS))
+MODEL_PATH=./build/objheader$(PROG_EXT)
+MODELS=$(wildcard assets/*.obj)
+MODELS_OUT=$(patsubst assets/%,build/%.h,$(MODELS))
 
 .SECONDEXPANSION:
-OBJ=$(patsubst build/%.h,assets/%,$@)
-OBJ_OUT=$@
-%.obj.h: $(OBJS)
-	$(OBJ_PATH) $(OBJ) > $(OBJ_OUT)
+MODEL=$(patsubst build/%.h,assets/%,$@)
+MODEL_OUT=$@
+%.obj.h: $(MODELS)
+	$(MODEL_PATH) $(MODEL) > $(MODEL_OUT)
 
-models: $(OBJS_OUT)
+models: $(MODELS_OUT)
 
-IMG_PATH=$(ARCH_PATH)/imgheader$(PROG_EXT)
+IMG_PATH=./build/imgheader$(PROG_EXT)
 IMGS=$(wildcard assets/*.png)
 IMGS_OUT=$(patsubst assets/%,build/%.h,$(IMGS))
 
@@ -51,7 +53,7 @@ IMG_OUT=$@
 
 images: $(IMGS_OUT)
 
-SHDR_PATH=$(ARCH_PATH)/shdrheader$(PROG_EXT)
+SHDR_PATH=./build/shdrheader$(PROG_EXT)
 SHDRS=$(wildcard assets/*.glsl)
 SHDRS_OUT=$(patsubst assets/%,build/%.h,$(SHDRS))
 
@@ -65,16 +67,44 @@ shaders: $(SHDRS_OUT)
 
 assets: models images shaders
 
+TOOLS := $(wildcard tools/*.c)
+PRGS := $(patsubst %.c,%,$(TOOLS))
+PRG_SUFFIX=.exe
+BINS := $(patsubst tools/%,build/%$(PRG_SUFFIX),$(PRGS))
+OBJS := $(patsubst %,%.o,$(PRGS))
+ifeq ($(PRG_SUFFIX_FLAG),0)
+	OUTS = $(PRGS)
+else
+	OUTS = $(BINS)
+endif
+
+CFLAGS:=-Ideps $(CFLAGS)
+
+.SECONDEXPANSION:
+OBJ = $(patsubst build/%$(PRG_SUFFIX),tools/%.o,$@)
+ifeq ($(PRG_SUFFIX_FLAG),0)
+	BIN = $(patsubst %$(PRG_SUFFIX),%,$@)
+else
+	BIN = $@
+endif
+%$(PRG_SUFFIX): $(OBJS)
+	$(CC) $(OBJ) -o $(BIN)
+
+tools: $(BINS)
+
 cwcgl:
 	$(CC) -shared -fpic -DCWCGL_VERSION=3020 -Ideps/cwcGL/src deps/cwcGL/src/cwcgl.c -framework Cocoa -o build/libcwcGL_$(ARCH).$(LIB_EXT)
 
-app: cwcgl assets
+app: cwcgl
 	$(CC) -std=c++11 -lstdc++ -Ideps/ -Ibuild/ -Ideps/glm -Ideps/ode/include -Ideps/ode/build/include -Ideps/cwcGL/src -Ldeps/ode/build -lode -Lbuild -lcwcGL_$(ARCH) $(DEPS) $(SOURCE) -o build/ceelo_$(ARCH)$(PROG_EXT)
 
 clean:
-	rm build/*
+	rm tools/*.o | true
 
-all: app
+verclean:
+	rm build/* | true
+	
+all: verclean tools assets app clean
 default: app
 
 .PHONY: default all app shaders models assets images
