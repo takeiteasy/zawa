@@ -201,7 +201,7 @@ int main(int argc, const char *argv[]) {
     if (!InitOpenGL())
         return 1;
     
-    glViewport(0, 0, 640, 480);
+//    glViewport(0, 0, 640, 480);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -210,8 +210,9 @@ int main(int argc, const char *argv[]) {
 #define X(NAME)                                                                                                   \
 do {                                                                                                              \
     glGenVertexArrays(1, &state.NAME##Model.id);                                                                  \
-    GLuint vbo = 0;                                                                                               \
     glBindVertexArray(state.NAME##Model.id);                                                                      \
+    GLuint vbo = 0;                                                                                               \
+    glGenBuffers(1, &vbo);                                                                                        \
     glBindBuffer(GL_ARRAY_BUFFER, vbo);                                                                           \
     glBufferData(GL_ARRAY_BUFFER, obj_##NAME##_data_size * sizeof(float), &obj_##NAME##_data[0], GL_STATIC_DRAW); \
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);                                        \
