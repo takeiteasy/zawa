@@ -8,11 +8,13 @@
 #include "dice.obj.h"
 #include "hand.obj.h"
 #include "plane.obj.h"
+#include "bowl.obj.h"
 #include "hand.png.h"
 #include "default.vert.glsl.h"
 #include "dice.frag.glsl.h"
 #include "hand.frag.glsl.h"
 #include "plane.frag.glsl.h"
+#include "bowl.frag.glsl.h"
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -28,7 +30,8 @@
 #define ASSETS \
     X(dice)    \
     X(hand)    \
-    X(plane)
+    X(plane)   \
+    X(bowl)
 
 typedef struct {
     int size;
@@ -229,7 +232,7 @@ int main(int argc, const char *argv[]) {
     if (!InitOpenGL())
         return 1;
     
-//    glViewport(0, 0, 640, 480);
+    glViewport(0, 0, 640*2, 480*2);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -299,6 +302,14 @@ do {                                                                       \
     floor.rigidBody.body = NULL;
     floor.world = glm::mat4(1.f);
     floor.model = &state.planeModel;
+    
+    GameObject bowl;
+    bowl.model = &state.bowlModel;
+    bowl.world = glm::mat4(1.f);
+    
+    Material bowlMaterial;
+    bowlMaterial.shininess = 32.f;
+    bowlMaterial.specular = glm::vec3(.25f, .25f, .25f);
       
     while (glPollWindow()) {
         dSpaceCollide(state.space, 0, collide);
@@ -313,6 +324,12 @@ do {                                                                       \
         glUniform3f(glGetUniformLocation(state.planeShader, "planeColor"), state.planeColor.x, state.planeColor.y, state.planeColor.z);
         PushLight(state.planeShader, &state.spotlight);
         RenderGameObject(state.planeShader, &floor);
+        
+        PushShader(state.bowlShader);
+        glUniform3f(glGetUniformLocation(state.planeShader, "viewPos"), state.cameraPosition.x, state.cameraPosition.y, state.cameraPosition.z);
+        PushMaterial(state.bowlShader, &bowlMaterial);
+        PushLight(state.bowlShader, &state.spotlight);
+        RenderGameObject(state.bowlShader, &bowl);
         
         PushShader(state.diceShader);
         glUniform3f(glGetUniformLocation(state.diceShader, "viewPos"), state.cameraPosition.x, state.cameraPosition.y, state.cameraPosition.z);
