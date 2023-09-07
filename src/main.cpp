@@ -3,6 +3,8 @@
 #include "ode/ode.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/quaternion.hpp"
+#include "glm/gtx/quaternion.hpp"
 #include "dice.obj.h"
 #include "hand.obj.h"
 #include "plane.obj.h"
@@ -46,7 +48,6 @@ typedef struct {
 typedef struct {
     RigidBody rigidBody;
     Model *model;
-    Material material;
     glm::mat4 world;
 } GameObject;
 
@@ -62,6 +63,14 @@ typedef struct {
     float linear;
     float quadratic;
 } Light;
+
+typedef struct Die {
+    GameObject go;
+    glm::vec3 color;
+    Material material;
+    int currentNumber;
+    struct Die *next;
+}  Die;
 
 static struct {
     dWorldID world;
@@ -81,36 +90,46 @@ static struct {
     
     glm::vec3 planeColor;
     Light spotlight;
+    struct {
+        Die *front, *back;
+    } dice;
 } state;
 
 // Window event callbacks, I think the names are self-explanatory
 void onKeyboard(void *userdata, int key, int modifier, int isDown) {
-    printf("Keyboard Event: Key %d is now %s\n", (int)key, isDown ? "down" : "up");
+    if (key == KEY_SPACE && !isDown) {
+        Die *die = (Die*)malloc(sizeof(Die));
+        die->color = glm::vec3(1.f, 0.f, 0.f);
+        die->currentNumber = 0;
+        die->material.shininess = 32.f;
+        die->material.specular = glm::vec3(.5f, .5f, .5f);
+        die->next = NULL;
+        
+        die->go.rigidBody.body = dBodyCreate(state.world);
+        dMass mass;
+        dMassSetBox(&mass, 1, 1, 1, 1);
+        dBodySetMass(die->go.rigidBody.body, &mass);
+        dBodySetPosition(die->go.rigidBody.body, 0.f, 0.f, 0.f);
+        die->go.rigidBody.geom = dCreateBox(state.space, .2f, .2f, .2f);
+        dGeomSetBody(die->go.rigidBody.geom, die->go.rigidBody.body);
+        die->go.model = &state.diceModel;
+        die->go.world = glm::mat4(1.f);
+        
+        if (!state.dice.front)
+            state.dice.front = state.dice.back = die;
+        else {
+            die->next = state.dice.front;
+            state.dice.front = die;
+        }
+    }
 }
 
-void onMouseButton(void *userdata, int button, int modifier, int isDown) {
-    printf("Mouse Button Event: Button %d is now %s\n", button, isDown ? "down" : "up");
-}
-
-void onMouseMove(void *userdata, int x, int y, float dx, float dy) {
-    printf("Mouse Move Event: Position (%d, %d) by (%f, %f)\n", x, y, dx, dy);
-}
-
-void onMouseScroll(void *userdata, float dx, float dy, int modifier) {
-    printf("Mouse Scroll Event: Scroll delta (%f, %f)\n", dx, dy);
-}
-
-void onFocus(void *userdata, int isFocused) {
-    printf("Focus Event: Window is now %s\n", isFocused ? "focused" : "unfocused");
-}
-
-void onResized(void *userdata, int w, int h) {
-    printf("Resize Event: Window is now (%d, %d)\n", w, h);
-}
-
-void onClosed(void *userdata) {
-    printf("Close Event: Window is now closing\n");
-}
+static void onMouseButton(void *userdata, int button, int modifier, int isDown) {}
+static void onMouseMove(void *userdata, int x, int y, float dx, float dy) {}
+static void onMouseScroll(void *userdata, float dx, float dy, int modifier) {}
+static void onFocus(void *userdata, int isFocused) {}
+static void onResized(void *userdata, int w, int h) {}
+static void onClosed(void *userdata) {}
 
 static void collide(void* data, dGeomID o1, dGeomID o2) {
     dBodyID b1 = dGeomGetBody(o1);
@@ -181,11 +200,14 @@ static void PushLight(GLuint shader, Light *light) {
     glUniform1f(glGetUniformLocation(shader, "light.quadratic"), light->quadratic);
 }
 
+static void PushMaterial(GLuint shader, Material *material) {
+    glUniform1i(glGetUniformLocation(shader, "material.diffuse"), 0);
+    glUniform3f(glGetUniformLocation(shader, "material.specular"), material->specular.x, material->specular.y, material->specular.z);
+    glUniform1f(glGetUniformLocation(shader, "material.shininess"), material->shininess);
+}
+
 static void RenderGameObject(GLuint shader, GameObject *obj) {
     glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &obj->world[0][0]);
-    glUniform1i(glGetUniformLocation(shader, "material.diffuse"), 0);
-    glUniform3f(glGetUniformLocation(shader, "material.specular"), obj->material.specular.x, obj->material.specular.y, obj->material.specular.z);
-    glUniform1f(glGetUniformLocation(shader, "material.shininess"), obj->material.shininess);
     glBindVertexArray(obj->model->id);
     glDrawArrays(GL_TRIANGLES, 0, obj->model->size);
     glBindVertexArray(0);
@@ -234,7 +256,7 @@ do {                                                                            
     dWorldSetGravity(state.world, 0.0, -9.81, 0.0);
     state.contactGroup = dJointGroupCreate(0);
     
-    state.cameraPosition = glm::vec3(0.f, 2.f, 2.2f);
+    state.cameraPosition = glm::vec3(0.f, 2.f, 4.f);
     state.cameraTarget = glm::vec3(0.f, .8f, 0.f);
     state.proj = glm::perspective(glm::radians(45.f), 640.f / 480.f, .1f, 1000.f);
     state.view = glm::lookAt(state.cameraPosition, state.cameraTarget, glm::vec3(0.f, 1.f, 0.f));
@@ -254,7 +276,7 @@ do {                                                                       \
     glDeleteShader(vertex);
     state.handTexture = MakeTexture(img_hand_data, img_hand_width, img_hand_height);
     
-    state.planeColor            = glm::vec3(1.f, 0.f, 0.f);
+    state.planeColor            = glm::vec3(0.f, 0.f, 0.f);
     state.spotlight.position    = glm::vec3(0.f, 7.f, 0.f);
     state.spotlight.direction   = glm::vec3(0.f, -1.f, 0.f);
     state.spotlight.cutOff      = cosf(glm::radians(12.5f));
@@ -288,10 +310,34 @@ do {                                                                       \
         PushLight(state.planeShader, &state.spotlight);
         RenderGameObject(state.planeShader, &floor);
         
+        glUseProgram(state.diceShader);
+        glUniformMatrix4fv(glGetUniformLocation(state.diceShader, "projection"), 1, GL_FALSE, &state.proj[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(state.diceShader, "view"), 1, GL_FALSE, &state.view[0][0]);
+        glUniform3f(glGetUniformLocation(state.diceShader, "viewPos"), state.cameraPosition.x, state.cameraPosition.y, state.cameraPosition.z);
+        PushLight(state.diceShader, &state.spotlight);
+        
+        Die *die = state.dice.front;
+        while (die) {
+            static const dReal *position, *rotation;
+            position = dBodyGetPosition(die->go.rigidBody.body);
+            rotation = dBodyGetRotation(die->go.rigidBody.body);
+            PushMaterial(state.diceShader, &die->material);
+            glUniform3f(glGetUniformLocation(state.diceShader, "dieColor"), die->color.x, die->color.y, die->color.z);
+            glUniformMatrix4fv(glGetUniformLocation(state.diceShader, "model"), 1, GL_FALSE, &die->go.world[0][0]);
+            RenderGameObject(state.diceShader, &die->go);
+            die = die->next;
+        }
+        
         glUseProgram(0);
         glFlushWindow();
     }
     
+    Die *die = state.dice.front;
+    while (die) {
+        Die *tmp = die->next;
+        free(die);
+        die = tmp;
+    }
 #define X(NAME)                      \
 glDeleteProgram(state.NAME##Shader); \
 glDeleteVertexArrays(1, &state.NAME##Model.id);
