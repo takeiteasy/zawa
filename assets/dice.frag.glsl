@@ -30,13 +30,13 @@ in vec2 TexCoords;
 uniform vec3 viewPos;
 uniform Material material;
 uniform Light light;
-uniform vec3 die_color;
+uniform vec3 dieColor;
 
 void main() {
     vec2 bl = step(vec2(0.7, 0.7), vec2(TexCoords.x, -TexCoords.y) + fract(gl_FragCoord.xy * vec2(64.f)));
     vec3 tex = vec3(bl.x * bl.y);
     if (tex.x == 0 && tex.y == 0 && tex.z == 0)
-        tex = die_color;
+        tex = dieColor;
     
     vec3 lightDir = normalize(light.position - FragPos);
     float theta = dot(lightDir, normalize(-light.direction));

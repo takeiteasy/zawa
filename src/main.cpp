@@ -206,6 +206,12 @@ static void PushMaterial(GLuint shader, Material *material) {
     glUniform1f(glGetUniformLocation(shader, "material.shininess"), material->shininess);
 }
 
+static void PushShader(GLuint shader) {
+    glUseProgram(shader);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, &state.proj[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, &state.view[0][0]);
+}
+
 static void RenderGameObject(GLuint shader, GameObject *obj) {
     glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &obj->world[0][0]);
     glBindVertexArray(obj->model->id);
@@ -301,18 +307,14 @@ do {                                                                       \
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        glUseProgram(state.planeShader);
-        glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "projection"), 1, GL_FALSE, &state.proj[0][0]);
-        glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "view"), 1, GL_FALSE, &state.view[0][0]);
+        PushShader(state.planeShader);
         glUniformMatrix4fv(glGetUniformLocation(state.planeShader, "model"), 1, GL_FALSE, &floor.world[0][0]);
         glUniform3f(glGetUniformLocation(state.planeShader, "viewPos"), state.cameraPosition.x, state.cameraPosition.y, state.cameraPosition.z);
         glUniform3f(glGetUniformLocation(state.planeShader, "planeColor"), state.planeColor.x, state.planeColor.y, state.planeColor.z);
         PushLight(state.planeShader, &state.spotlight);
         RenderGameObject(state.planeShader, &floor);
         
-        glUseProgram(state.diceShader);
-        glUniformMatrix4fv(glGetUniformLocation(state.diceShader, "projection"), 1, GL_FALSE, &state.proj[0][0]);
-        glUniformMatrix4fv(glGetUniformLocation(state.diceShader, "view"), 1, GL_FALSE, &state.view[0][0]);
+        PushShader(state.diceShader);
         glUniform3f(glGetUniformLocation(state.diceShader, "viewPos"), state.cameraPosition.x, state.cameraPosition.y, state.cameraPosition.z);
         PushLight(state.diceShader, &state.spotlight);
         
