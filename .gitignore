@@ -6,3 +6,4 @@ build/
 .DS_Store
 *.blend1
 deps/ode/
+*.o

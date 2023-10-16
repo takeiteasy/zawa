@@ -2,23 +2,25 @@ ifeq ($(OS),Windows_NT)
 	PROG_EXT=.exe
 	PRG_SUFFIX_FLAG=1
 	LIB_EXT=dll
-	DEPS=-lkernel32 -luser32 -lshell32 -lgdi32 -lopengl32
+	DEPS=-lkernel32 -luser32 -lshell32 -lSDL2
 	ARCH=win32
 else
 	UNAME:=$(shell uname -s)
 	PROG_EXT=
 	PRG_SUFFIX_FLAG=0
 	ifeq ($(UNAME),Darwin)
-		DEPS=-x objective-c++ -fobjc-arc -framework Cocoa -framework OpenGL
 		ARCH:=$(shell uname -m)
 		LIB_EXT=dylib
 		ifeq ($(ARCH),arm64)
 			ARCH=osx_arm64
+			DEPS=-I/opt/homebrew/include -L/opt/homebrew/lib
 		else
 			ARCH=osx
+			DEPS=-I/usr/local/include -L/usr/local/lib
 		endif
+		DEPS+=-lSDL2 -framework OpenGL
 	else ifeq ($(UNAME),Linux)
-		DEPS=-lGL -ldl -lm -lX11 -lXi -lXcursor
+		DEPS=-lGL -ldl -lm -lSDL2
 		ARCH=linux
 		LIB_EXT=so
 	else
@@ -92,19 +94,15 @@ endif
 
 tools: $(BINS)
 
-cwcgl:
-	$(CC) -shared -fpic -DCWCGL_VERSION=3020 -Ideps/cwcGL/src deps/cwcGL/src/cwcgl.c -framework Cocoa -o build/libcwcGL_$(ARCH).$(LIB_EXT)
-
-app: cwcgl
-	$(CC) -std=c++11 -lstdc++ -Ideps/ -Ibuild/ -Ideps/glm -Ideps/ode/include -Ideps/ode/build/include -Ideps/cwcGL/src -Ldeps/ode/build -lode -Lbuild -lcwcGL_$(ARCH) $(DEPS) $(SOURCE) -o build/ceelo_$(ARCH)$(PROG_EXT)
-
 clean:
 	rm tools/*.o | true
 
-verclean:
+veryclean:
 	rm build/* | true
-	
-all: verclean tools assets app clean
-default: app
 
-.PHONY: default all app shaders models assets images
+default:
+	$(CC) -std=c++11 -lstdc++ -Ideps/ -Ibuild/ -Ideps/glm -Lbuild $(DEPS) $(SOURCE) deps/glad.cpp -o build/zawa_$(ARCH)$(PROG_EXT)
+
+all: veryclean tools assets default clean
+
+.PHONY: default all veryclean shaders models assets images
