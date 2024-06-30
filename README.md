@@ -1,6 +1,8 @@
-# chinchiro
+# zawa 
 
 A 3D dice game based on *Underground Chinchiro* featuring in Kaiji S2. Remake of the first game I made.
+
+![screenshot](/assets/screenshot.png)
 
 ## Dependencies
 
